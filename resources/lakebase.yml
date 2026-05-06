@@ -1,0 +1,90 @@
+# Lakebase Provisioned setup for the Panda Labor Optimization app.
+#
+# Provides:
+#   1. A Lakebase Provisioned instance (CU_1) backing the app's OLTP needs.
+#   2. Four read-direction synced tables (UC -> Lakebase, TRIGGERED) so the
+#      app can serve forecasts / recs / targets / stores with low latency.
+#   3. The native Postgres `schedules` table (DDL applied via psql in
+#      notebooks/05_init_schedules_table.sql; not declarable in DABs today).
+#
+# Outbound sync (Lakebase Postgres -> UC) gap
+# -------------------------------------------
+# As of CLI v0.299 / current DAB schema, `synced_database_tables` only models
+# Delta -> Postgres reverse ETL (one direction). There is no DAB resource for
+# Postgres -> UC outbound sync, and no general-availability API for it from
+# Lakebase Provisioned at this time. The app still works: writes land in
+# Lakebase first (low-latency from the app); for analytics access we will
+# either (a) add a scheduled job that reads Lakebase via psycopg and MERGEs
+# into a UC `schedules_history` Delta table, or (b) adopt outbound sync once
+# Databricks ships it. Tracked as a known gap, NOT a blocker.
+
+resources:
+  database_instances:
+    panda_labor_db:
+      name: ${var.lakebase_instance}
+      capacity: CU_1
+      stopped: false
+
+  synced_database_tables:
+    sales_forecasts_synced:
+      name: ${var.catalog}.${var.schema}.sales_forecasts_synced
+      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      logical_database_name: panda_labor
+      spec:
+        source_table_full_name: ${var.catalog}.${var.schema}.sales_forecasts
+        primary_key_columns:
+          - store_id
+          - forecast_date
+          - day_part
+        scheduling_policy: TRIGGERED
+        create_database_objects_if_missing: true
+        new_pipeline_spec:
+          storage_catalog: ${var.catalog}
+          storage_schema: ${var.schema}
+
+    labor_recommendations_synced:
+      name: ${var.catalog}.${var.schema}.labor_recommendations_synced
+      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      logical_database_name: panda_labor
+      spec:
+        source_table_full_name: ${var.catalog}.${var.schema}.labor_recommendations
+        primary_key_columns:
+          - store_id
+          - forecast_date
+          - day_part
+        scheduling_policy: TRIGGERED
+        create_database_objects_if_missing: true
+        new_pipeline_spec:
+          storage_catalog: ${var.catalog}
+          storage_schema: ${var.schema}
+
+    staffing_targets_synced:
+      name: ${var.catalog}.${var.schema}.staffing_targets_synced
+      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      logical_database_name: panda_labor
+      spec:
+        source_table_full_name: ${var.catalog}.${var.schema}.staffing_targets
+        primary_key_columns:
+          - store_id
+          - day_of_week
+          - day_part
+          - sales_band_low
+        scheduling_policy: TRIGGERED
+        create_database_objects_if_missing: true
+        new_pipeline_spec:
+          storage_catalog: ${var.catalog}
+          storage_schema: ${var.schema}
+
+    stores_synced:
+      name: ${var.catalog}.${var.schema}.stores_synced
+      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      logical_database_name: panda_labor
+      spec:
+        source_table_full_name: ${var.catalog}.${var.schema}.stores
+        primary_key_columns:
+          - store_id
+        scheduling_policy: TRIGGERED
+        create_database_objects_if_missing: true
+        new_pipeline_spec:
+          storage_catalog: ${var.catalog}
+          storage_schema: ${var.schema}
