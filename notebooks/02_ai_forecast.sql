@@ -1,14 +1,14 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC # Sales Forecast: predict sales by store × date × day-part
+-- MAGIC # AI Forecast: predict sales by store × date × day-part
 -- MAGIC
--- MAGIC Originally designed to use `ai_forecast()`, but that built-in is gated off
--- MAGIC in this workspace (`UNSUPPORTED_FEATURE.AI_FUNCTION_PREVIEW`). This notebook
--- MAGIC therefore produces a deterministic baseline forecast: historical mean revenue
--- MAGIC per store × day-of-week (last 90 days), projected forward 14 days, then split
--- MAGIC into day-parts using the historical labor share. Schema and outputs are
--- MAGIC identical to the ai_forecast version so downstream consumers don't change.
--- MAGIC Writes 14 days forward into `sales_forecasts`.
+-- MAGIC Uses `ai_forecast()` on `daily_store_revenue`. Must run on a **serverless SQL
+-- MAGIC warehouse** (the function is not available on Spark serverless compute).
+-- MAGIC
+-- MAGIC The historical revenue table spans 2023-2024 in this demo; the workspace
+-- MAGIC clock is later. We anchor the forecast horizon to `MAX(sale_date) + 14 days`
+-- MAGIC (not `current_date()`) so we forecast forward from the data's actual edge.
+-- MAGIC Writes per-day-part rows into `sales_forecasts`.
 
 -- COMMAND ----------
 
@@ -22,35 +22,31 @@ CREATE TABLE IF NOT EXISTS jdub_demo.panda.sales_forecasts (
   model_version STRING
 );
 
--- Wipe before re-populating (idempotent)
 DELETE FROM jdub_demo.panda.sales_forecasts;
 
 -- COMMAND ----------
 
--- Historical mean daily revenue per store × DOW.
--- Uses the most-recent 180 days of revenue we actually have (data spans 2023-2024
--- in this demo, while "today" floats forward), so we anchor to MAX(sale_date)
--- rather than current_date().
-CREATE OR REPLACE TEMP VIEW daily_forecast AS
-WITH bounds AS (
-  SELECT MAX(sale_date) AS max_d FROM jdub_demo.panda.daily_store_revenue
-)
-SELECT
-  d.store_id,
-  DAYOFWEEK(d.sale_date) AS dow,
-  AVG(d.total_revenue) AS y_forecast
+-- Anchor to the latest date we have revenue for; ai_forecast extrapolates from there.
+CREATE OR REPLACE TEMP VIEW input_series AS
+WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.panda.daily_store_revenue)
+SELECT d.store_id, d.sale_date AS ds, d.total_revenue AS y
 FROM jdub_demo.panda.daily_store_revenue d, bounds
-WHERE d.sale_date >= DATE_SUB(bounds.max_d, 180)
-GROUP BY d.store_id, DAYOFWEEK(d.sale_date);
+WHERE d.sale_date >= DATE_SUB(bounds.max_d, 180);
 
--- Future date dimension: next 14 days
-CREATE OR REPLACE TEMP VIEW future_dates AS
-SELECT
-  CAST(DATE_ADD(current_date(), n + 1) AS DATE) AS ds,
-  DAYOFWEEK(DATE_ADD(current_date(), n + 1)) AS dow
-FROM (SELECT EXPLODE(SEQUENCE(0, 13)) AS n);
+-- Forecast 14 days past the data edge.
+CREATE OR REPLACE TEMP VIEW daily_forecast AS
+WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.panda.daily_store_revenue)
+SELECT *
+FROM ai_forecast(
+  TABLE(input_series),
+  horizon => (SELECT DATE_ADD(max_d, 14) FROM bounds),
+  time_col => 'ds',
+  value_col => 'y',
+  group_col => ARRAY('store_id'),
+  prediction_interval_width => 0.95
+);
 
--- Day-part labor share by store × DOW (used to apportion daily revenue)
+-- Day-part split derived from synthetic labor history.
 CREATE OR REPLACE TEMP VIEW dayparts_share AS
 WITH dp_totals AS (
   SELECT s.store_id, DAYOFWEEK(s.shift_date) AS dow, s.day_part,
@@ -68,21 +64,20 @@ FROM dp_totals t JOIN day_totals d USING (store_id, dow);
 INSERT INTO jdub_demo.panda.sales_forecasts
 SELECT
   f.store_id,
-  fd.ds AS forecast_date,
+  CAST(f.ds AS DATE) AS forecast_date,
   s.day_part,
   ROUND(f.y_forecast * COALESCE(s.share, 0.25), 2) AS predicted_revenue,
   CAST(ROUND(f.y_forecast * COALESCE(s.share, 0.25) / 12.50) AS BIGINT) AS predicted_transactions,
   current_timestamp() AS forecast_ts,
-  'baseline_mean_v1' AS model_version
+  'ai_forecast_v1' AS model_version
 FROM daily_forecast f
-JOIN future_dates fd
-  ON fd.dow = f.dow
 JOIN dayparts_share s
-  ON s.store_id = f.store_id AND s.dow = f.dow;
+  ON f.store_id = s.store_id AND DAYOFWEEK(CAST(f.ds AS DATE)) = s.dow
+WHERE CAST(f.ds AS DATE) > (SELECT MAX(sale_date) FROM jdub_demo.panda.daily_store_revenue);
 
--- Sanity
 SELECT COUNT(*) AS forecast_rows,
        MIN(forecast_date) AS first_day,
-       MAX(forecast_date) AS last_day
+       MAX(forecast_date) AS last_day,
+       COUNT(DISTINCT store_id) AS n_stores
 FROM jdub_demo.panda.sales_forecasts
 WHERE forecast_ts >= current_timestamp() - INTERVAL 1 HOUR;
