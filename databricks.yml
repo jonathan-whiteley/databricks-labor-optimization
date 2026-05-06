@@ -1,0 +1,38 @@
+bundle:
+  name: panda-labor-optimization
+
+variables:
+  catalog:
+    description: Catalog for all data
+    default: jdub_demo
+  schema:
+    description: Schema with Panda data
+    default: panda
+  app_name:
+    description: Databricks App name
+    default: panda-labor-planner
+  endpoint_name:
+    description: Model Serving endpoint
+    default: panda-labor-rec-v1
+  job_name:
+    description: Refresh job
+    default: panda_labor_refresh
+  lakebase_instance:
+    description: Lakebase instance name
+    default: panda-labor-db
+  user_email:
+    description: Owner email
+    default: jonathan.whiteley@databricks.com
+
+include:
+  - resources/*.yml
+
+targets:
+  default:
+    mode: development
+    default: true
+    workspace:
+      host: https://fe-vm-jdub-vm-serverless.cloud.databricks.com
+      profile: DEFAULT
+    run_as:
+      user_name: ${var.user_email}

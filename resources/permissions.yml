@@ -1,0 +1,4 @@
+# Permissions are declared per-resource within each resource YAML for clarity.
+# This file holds catalog/schema-level grants that aren't tied to a single resource.
+# Will be populated as resources are added.
+resources: {}
