@@ -1,0 +1,18 @@
+resources:
+  model_serving_endpoints:
+    panda_labor_endpoint:
+      name: ${var.endpoint_name}
+      config:
+        served_entities:
+          - name: panda-labor-rec-current
+            entity_name: ${var.catalog}.${var.schema}.panda_labor_rec_model
+            entity_version: "5"
+            workload_size: Small
+            scale_to_zero_enabled: true
+        traffic_config:
+          routes:
+            - served_model_name: panda-labor-rec-current
+              traffic_percentage: 100
+      permissions:
+        - user_name: ${var.user_email}
+          level: CAN_MANAGE

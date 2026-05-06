@@ -1,0 +1,23 @@
+resources:
+  jobs:
+    panda_labor_refresh:
+      name: ${var.job_name}
+      tasks:
+        - task_key: ai_forecast
+          notebook_task:
+            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/02_ai_forecast
+            warehouse_id: 0168e23e24e6ae10
+        - task_key: run_recommendations
+          depends_on:
+            - task_key: ai_forecast
+          notebook_task:
+            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/04_run_recommendations
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+      max_concurrent_runs: 1
+      permissions:
+        - user_name: ${var.user_email}
+          level: IS_OWNER
