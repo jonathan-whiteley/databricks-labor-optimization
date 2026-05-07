@@ -1,0 +1,35 @@
+# Databricks App resource for the Panda Labor Optimization demo.
+#
+# Resource bindings supported by the App's `resources` block in this CLI:
+#   - database         -> Lakebase instance (CAN_CONNECT_AND_CREATE only)
+#   - serving_endpoint -> Model Serving endpoint (CAN_VIEW / CAN_QUERY / CAN_MANAGE)
+#   - uc_securable     -> UC objects of type VOLUME / TABLE / FUNCTION / CONNECTION
+#                         (SCHEMA is NOT a valid securable_type in the current
+#                         AppResourceUcSecurable schema, so schema-level grants
+#                         are managed in resources/permissions.yml instead).
+#
+# source_code_path uses `..` because this resource file lives in resources/ and
+# the deployable source (app.yaml at repo root, src/, ui/static, ...) is one
+# directory up.
+
+resources:
+  apps:
+    panda_app:
+      name: ${var.app_name}
+      description: "Panda Express labor optimization demo app"
+      source_code_path: ..
+      resources:
+        - name: lakebase
+          description: "Lakebase Postgres instance backing forecasts/recs/schedules."
+          database:
+            instance_name: ${var.lakebase_instance}
+            database_name: panda_labor
+            permission: CAN_CONNECT_AND_CREATE
+        - name: labor_endpoint
+          description: "Foundation-model serving endpoint for labor recommendations."
+          serving_endpoint:
+            name: ${var.endpoint_name}
+            permission: CAN_QUERY
+      permissions:
+        - user_name: ${var.user_email}
+          level: CAN_MANAGE

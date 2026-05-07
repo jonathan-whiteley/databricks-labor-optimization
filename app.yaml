@@ -1,0 +1,24 @@
+command:
+  - "uvicorn"
+  - "panda_labor.app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+env:
+  - name: CATALOG
+    value: jdub_demo
+  - name: BRAND_SCHEMA
+    value: panda
+  - name: LAKEBASE_INSTANCE_NAME
+    value: panda-labor-db
+  - name: LAKEBASE_DATABASE
+    value: panda_labor
+  - name: LAKEBASE_PG_SCHEMA
+    value: panda
+  - name: LAKEBASE_HOST
+    value: ep-icy-star-d1twxm2q.database.us-west-2.cloud.databricks.com
+  - name: SERVING_ENDPOINT_NAME
+    value: dev_jonathan_whiteley_panda-labor-rec-v1
+  - name: USER_EMAIL
+    value: jonathan.whiteley@databricks.com

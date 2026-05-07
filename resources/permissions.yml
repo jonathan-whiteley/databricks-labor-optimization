@@ -1,4 +1,34 @@
-# Permissions are declared per-resource within each resource YAML for clarity.
-# This file holds catalog/schema-level grants that aren't tied to a single resource.
-# Will be populated as resources are added.
-resources: {}
+# UC schema-level grants for the App service principal.
+#
+# Why this is here and not in resources/app.yml:
+#   The App resource's `uc_securable` binding only supports securable_type of
+#   VOLUME / TABLE / FUNCTION / CONNECTION (no SCHEMA), so we cannot declare
+#   USE_SCHEMA / SELECT on jdub_demo.panda inside the App block. We also
+#   cannot use a top-level `grants:` resource: it does not exist in the
+#   current CLI bundle schema. The cleanest declarative path left is a
+#   `schemas:` resource that adopts the existing schema and declares its
+#   grants inline.
+#
+# The schema jdub_demo.panda already exists; in `mode: development` the
+# bundle prefixes resource keys (Terraform IDs) but the literal `name`
+# stays as declared, so the deploy targets the same physical schema.
+#
+# The App service principal name is computed by the platform after the App
+# is created; in bundle interpolation it is exposed as
+# `${resources.apps.<key>.service_principal_name}`.
+
+resources:
+  schemas:
+    panda_schema_grants:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      grants:
+        - principal: ${resources.apps.panda_app.service_principal_name}
+          privileges:
+            - USE_SCHEMA
+            - SELECT
+        - principal: ${var.user_email}
+          privileges:
+            - USE_SCHEMA
+            - SELECT
+            - MODIFY

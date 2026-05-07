@@ -1,6 +1,8 @@
 """FastAPI entry - mounts routers, manages Lakebase pool + endpoint warm."""
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from .lakebase import get_pool
 from .model_client import warm
 from .routers import stores, forecast, recommendation, schedule
@@ -30,3 +32,10 @@ app.include_router(schedule.router)
 @app.get("/api/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Mount UI static last so /api/* routes take precedence.
+# Directory is optional: it won't exist during unit tests or local API-only dev.
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.exists():
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="ui")
