@@ -42,7 +42,6 @@ export function AdjustScreen({ storeId, date, onCancel, onApprove }: Props) {
     if (!state) return
     const timers: number[] = []
     Object.entries(state).forEach(([dp, val]) => {
-      if (val.revenue === val.originalRec.recommended_cost) return
       const t = window.setTimeout(async () => {
         try {
           const newRec = await recompute({
