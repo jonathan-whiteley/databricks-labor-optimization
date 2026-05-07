@@ -1,0 +1,25 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-panda-red: #D2272F;
+  --color-panda-gold: #C9A961;
+  --color-panda-cream: #FAF7F2;
+  --color-panda-ink: #1A1A1A;
+  --font-sans: "DM Sans", "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --brand-primary: #D2272F;
+  --brand-accent: #C9A961;
+  --brand-canvas: #FAF7F2;
+  --brand-ink: #1A1A1A;
+}
+
+html, body, #root { height: 100%; }
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: var(--brand-canvas);
+  color: var(--brand-ink);
+}
+.tabular { font-variant-numeric: tabular-nums; }
