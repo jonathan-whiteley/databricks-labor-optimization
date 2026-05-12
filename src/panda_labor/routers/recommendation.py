@@ -39,6 +39,9 @@ def _parse_role_mix(raw) -> RoleMix:
 
 @router.get("/{store_id}/{forecast_date}", response_model=RecommendationResponse)
 async def get_recommendation(store_id: int, forecast_date: date) -> RecommendationResponse:
+    """Return the plan for a store/date. When the user has approved a
+    schedule, the latest approval per day_part overrides the model's
+    recommendation so the UI reflects the persisted decision after reload."""
     async with conn() as c:
         rows = await c.fetch(
             """
@@ -52,19 +55,46 @@ async def get_recommendation(store_id: int, forecast_date: date) -> Recommendati
             """,
             store_id, forecast_date,
         )
+        approvals = await c.fetch(
+            """
+            SELECT DISTINCT ON (day_part)
+                   day_part,
+                   approved_headcount, approved_cost,
+                   approved_role_cook, approved_role_cashier,
+                   approved_role_shift_lead, approved_role_manager
+            FROM schedules
+            WHERE store_id = $1 AND schedule_date = $2
+            ORDER BY day_part, approved_ts DESC
+            """,
+            store_id, forecast_date,
+        )
     if not rows:
         raise HTTPException(
             404, f"No recommendation for store {store_id} on {forecast_date}"
         )
-    parts = [
-        DayPartRecommendation(
-            day_part=r["day_part"],
-            recommended_headcount=r["recommended_headcount"],
-            recommended_cost=r["recommended_cost"],
-            recommended_role_mix=_parse_role_mix(r["recommended_role_mix"]),
-        )
-        for r in rows
-    ]
+    approved_by_dp = {a["day_part"]: a for a in approvals}
+    parts: list[DayPartRecommendation] = []
+    for r in rows:
+        a = approved_by_dp.get(r["day_part"])
+        if a is not None:
+            parts.append(DayPartRecommendation(
+                day_part=r["day_part"],
+                recommended_headcount=a["approved_headcount"],
+                recommended_cost=a["approved_cost"],
+                recommended_role_mix=RoleMix(
+                    cook=a["approved_role_cook"],
+                    cashier=a["approved_role_cashier"],
+                    shift_lead=a["approved_role_shift_lead"],
+                    manager=a["approved_role_manager"],
+                ),
+            ))
+        else:
+            parts.append(DayPartRecommendation(
+                day_part=r["day_part"],
+                recommended_headcount=r["recommended_headcount"],
+                recommended_cost=r["recommended_cost"],
+                recommended_role_mix=_parse_role_mix(r["recommended_role_mix"]),
+            ))
     return RecommendationResponse(
         store_id=store_id, forecast_date=forecast_date,
         generated_ts=rows[0]["generated_ts"], day_parts=parts,

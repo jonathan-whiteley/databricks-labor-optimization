@@ -73,6 +73,7 @@ export default function App() {
           perDayPart={pending.perDayPart}
           onClose={() => setApproveOpen(false)}
           onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["rec", pending.storeId, pending.date] })
             setApproveOpen(false)
             setScreen("today")
             setPending(null)
