@@ -38,6 +38,13 @@ export interface Theme {
   dayparts: Record<DayPartId, DayPartTheme>
   hourCurves: Record<DayPartId, number[]>   // 0..1 bars rendered atop the daypart band
   greeting: { firstName: string; role: string; initials: string }
+  // Labor cost as % of predicted sales — thresholds for the per-card ring.
+  //   lo..hi      → on target (green)
+  //   < lo        → below target (amber, may be understaffed)
+  //   hi < x ≤ critical → above target (gold/amber)
+  //   x > critical → over (red)
+  //   x >= 1      → "over 100%" flagged hard
+  laborTarget: { lo: number; hi: number; critical: number }
   weatherChipDefault: string
   genie: {
     title: string                   // e.g. "Ask Genie"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { C, DP_THEME, HOUR_CURVE, fmt$, fmt$k, type DayPartId } from "@/lib/theme"
 import type { RoleMix } from "@/lib/api"
 import { Icon } from "./Icon"
+import { LaborPctRing } from "./LaborPctRing"
 
 interface Props {
   id: DayPartId
@@ -195,6 +196,10 @@ export function DaypartCard({
           delta={isOverridden ? costDelta : null}
           isMoney
         />
+      </div>
+
+      <div style={{ padding: "14px 20px 0" }}>
+        <LaborPctRing pct={revenue > 0 ? currentRec.recommended_cost / revenue : 0} />
       </div>
 
       <div style={{ padding: "14px 20px 4px" }}>

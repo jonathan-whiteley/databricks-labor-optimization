@@ -32,6 +32,7 @@ export const pandaTheme: Theme = {
     late:      [0.85, 0.6, 0.3, 0.15],
   },
   greeting: { firstName: "Marisol", role: "General Manager", initials: "MR" },
+  laborTarget: { lo: 0.22, hi: 0.26, critical: 0.40 },
   weatherChipDefault: "72°F · Sunny in Pasadena",
   genie: {
     title: "Ask Genie",
