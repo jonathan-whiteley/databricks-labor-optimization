@@ -1,10 +1,26 @@
 """Lakebase Postgres connection pool with auto-rotating OAuth credentials."""
+import os
 import uuid
 import asyncpg
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from databricks.sdk import WorkspaceClient
 from .config import settings
+
+
+def _db_user() -> str:
+    """Pick the Postgres role to authenticate as.
+
+    When running inside a Databricks App, the platform sets DATABRICKS_CLIENT_ID
+    to the App service principal's client_id (a UUID). Lakebase OAuth requires
+    the connecting user to match the identity that minted the token, so we
+    authenticate as the SP when present and fall back to the human owner email
+    for local dev.
+    """
+    sp = os.getenv("DATABRICKS_CLIENT_ID")
+    if sp:
+        return sp
+    return settings().user_email
 
 
 _pool: asyncpg.Pool | None = None
@@ -38,7 +54,7 @@ async def get_pool() -> asyncpg.Pool:
         _pool = await asyncpg.create_pool(
             host=s.lakebase_host,
             port=5432,
-            user=s.user_email,
+            user=_db_user(),
             password=token,
             database=s.lakebase_database,
             ssl="require",

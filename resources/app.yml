@@ -28,7 +28,10 @@ resources:
         - name: labor_endpoint
           description: "Foundation-model serving endpoint for labor recommendations."
           serving_endpoint:
-            name: ${var.endpoint_name}
+            # Reference the endpoint resource so we pick up the dev-mode prefix
+            # (e.g. dev_jonathan_whiteley_panda-labor-rec-v1) instead of the
+            # literal var.endpoint_name (panda-labor-rec-v1) which doesn't exist.
+            name: ${resources.model_serving_endpoints.panda_labor_endpoint.name}
             permission: CAN_QUERY
       permissions:
         - user_name: ${var.user_email}

@@ -16,3 +16,9 @@ resources:
       permissions:
         - user_name: ${var.user_email}
           level: CAN_MANAGE
+        # App SP needs CAN_QUERY so the App can call this endpoint. We use the
+        # client_id (UUID) here because the bundle's `service_principal_name`
+        # interpolation produces a display string with a space, which UC
+        # rejects as an invalid principal.
+        - service_principal_name: ${resources.apps.panda_app.service_principal_client_id}
+          level: CAN_QUERY

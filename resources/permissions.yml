@@ -1,34 +1,18 @@
 # UC schema-level grants for the App service principal.
 #
-# Why this is here and not in resources/app.yml:
-#   The App resource's `uc_securable` binding only supports securable_type of
-#   VOLUME / TABLE / FUNCTION / CONNECTION (no SCHEMA), so we cannot declare
-#   USE_SCHEMA / SELECT on jdub_demo.panda inside the App block. We also
-#   cannot use a top-level `grants:` resource: it does not exist in the
-#   current CLI bundle schema. The cleanest declarative path left is a
-#   `schemas:` resource that adopts the existing schema and declares its
-#   grants inline.
+# Originally we declared a `schemas:` resource here that adopted the existing
+# jdub_demo.panda schema and granted USE_SCHEMA + SELECT to the App SP via
+# `${resources.apps.panda_app.service_principal_name}`. That interpolation
+# resolves to a display-style string like "app-4hg19f panda-labor-planner"
+# (with a space), which is not a valid UC principal identifier; the deploy
+# failed with: "Could not find principal with name app-4hg19f
+# panda-labor-planner".
 #
-# The schema jdub_demo.panda already exists; in `mode: development` the
-# bundle prefixes resource keys (Terraform IDs) but the literal `name`
-# stays as declared, so the deploy targets the same physical schema.
+# Fallback: apply the grants out-of-band via SQL after deploy:
 #
-# The App service principal name is computed by the platform after the App
-# is created; in bundle interpolation it is exposed as
-# `${resources.apps.<key>.service_principal_name}`.
+#   GRANT USE SCHEMA, SELECT ON SCHEMA jdub_demo.panda TO `<app-sp-client-id>`;
+#
+# where <app-sp-client-id> is the App's service_principal_client_id (a UUID),
+# discoverable via `databricks apps get panda-labor-planner`.
 
-resources:
-  schemas:
-    panda_schema_grants:
-      catalog_name: ${var.catalog}
-      name: ${var.schema}
-      grants:
-        - principal: ${resources.apps.panda_app.service_principal_name}
-          privileges:
-            - USE_SCHEMA
-            - SELECT
-        - principal: ${var.user_email}
-          privileges:
-            - USE_SCHEMA
-            - SELECT
-            - MODIFY
+resources: {}
