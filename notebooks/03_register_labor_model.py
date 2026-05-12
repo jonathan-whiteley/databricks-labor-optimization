@@ -26,8 +26,14 @@ MODEL_NAME = f"{CATALOG}.{SCHEMA}.panda_labor_rec_model"
 # COMMAND ----------
 
 class PandaLaborModel(mlflow.pyfunc.PythonModel):
-    SALES_PER_LABOR_HOUR = 250.0
-    MULT = {"breakfast": 0.8, "lunch": 1.2, "dinner": 1.1, "late": 0.7}
+    # Tuned to land most stores at ~24% labor% (within the 22-26% goal).
+    # labor_pct ≈ (HOURS_PER_DP * AVG_RATE * MULT[dp]) / SALES_PER_LABOR_HOUR
+    # With AVG_RATE=17.50, HOURS_PER_DP=4 → labor_pct ≈ 70 * MULT / SALES_PER_LH.
+    # MULT differentiates intensity by day-part; ceil() rounding will push
+    # smaller-volume stores slightly above target (those are the outliers
+    # store managers should review).
+    SALES_PER_LABOR_HOUR = 295.0
+    MULT = {"breakfast": 0.95, "lunch": 1.05, "dinner": 1.00, "late": 0.95}
     AVG_RATE = 17.50
     HOURS_PER_DP = 4.0
 
@@ -39,10 +45,20 @@ class PandaLaborModel(mlflow.pyfunc.PythonModel):
             if dp not in self.MULT:
                 raise ValueError(f"Unknown day_part: {dp}")
             hc = max(1, math.ceil((sales / self.SALES_PER_LABOR_HOUR) * self.MULT[dp]))
-            cook = max(1, int(hc * 0.45))
-            cashier = max(1, int(hc * 0.35))
-            lead = max(0, int(hc * 0.15)) or (1 if hc > 4 else 0)
-            mgr = 1 if hc >= 5 else 0
+            # Floor allocation by total crew size, then split the remainder
+            # 55/45 between cooks and cashiers. Sum always equals hc.
+            if hc >= 6:
+                cook, cashier, lead, mgr = 1, 1, 1, 1
+            elif hc >= 4:
+                cook, cashier, lead, mgr = 1, 1, 1, 0
+            elif hc >= 2:
+                cook, cashier, lead, mgr = 1, 1, 0, 0
+            else:
+                cook, cashier, lead, mgr = 1, 0, 0, 0
+            remaining = hc - (cook + cashier + lead + mgr)
+            add_cook = round(remaining * 0.55)
+            cook += add_cook
+            cashier += (remaining - add_cook)
             cost = round(hc * self.AVG_RATE * self.HOURS_PER_DP, 2)
             rows.append({
                 "recommended_headcount": hc,

@@ -6,7 +6,7 @@ resources:
         served_entities:
           - name: panda-labor-rec-current
             entity_name: ${var.catalog}.${var.schema}.panda_labor_rec_model
-            entity_version: "5"
+            entity_version: "6"
             workload_size: Small
             scale_to_zero_enabled: true
         traffic_config:
