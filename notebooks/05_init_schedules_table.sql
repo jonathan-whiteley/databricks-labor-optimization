@@ -28,7 +28,12 @@ CREATE TABLE IF NOT EXISTS panda.schedules (
   approved_by              TEXT NOT NULL,
   approved_ts              TIMESTAMPTZ NOT NULL DEFAULT now(),
   source_recommendation_ts TIMESTAMPTZ,
-  override_reason          TEXT
+  override_reason          TEXT,
+  -- The forecast revenue at which the manager was approving. Lets the read
+  -- side reconcile the approved crew / cost with what the GM saw when they
+  -- locked the plan in — without this, a stale approval reads as "22 crew
+  -- for a $103 forecast" once the underlying AI forecast moves.
+  overridden_revenue       DOUBLE PRECISION
 );
 
 CREATE INDEX IF NOT EXISTS schedules_store_date_idx

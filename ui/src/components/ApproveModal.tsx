@@ -3,13 +3,18 @@ import { C, theme, fmt$, crewCount } from "@/lib/theme"
 import { Icon } from "./Icon"
 import { saveSchedule, type DayPartRec, type Store } from "@/lib/api"
 
+export interface DayPartApproval {
+  rec: DayPartRec
+  revenue: number
+}
+
 interface Props {
   open: boolean
   onClose: () => void
   onSaved: () => void
   store: Store
   date: string
-  perDayPart: Record<string, DayPartRec>
+  perDayPart: Record<string, DayPartApproval>
   totals: { predRev: number; predCost: number; headcount: number }
   overrideCount: number
 }
@@ -31,14 +36,15 @@ export function ApproveModal({
       await saveSchedule({
         store_id: store.store_id,
         schedule_date: date,
-        day_parts: Object.entries(perDayPart).map(([dp, r]) => ({
+        day_parts: Object.entries(perDayPart).map(([dp, v]) => ({
           day_part: dp,
-          approved_headcount: crewCount(r.recommended_role_mix),
-          approved_cost: r.recommended_cost,
-          approved_role_cook: r.recommended_role_mix.cook,
-          approved_role_cashier: r.recommended_role_mix.cashier,
-          approved_role_shift_lead: r.recommended_role_mix.shift_lead,
-          approved_role_manager: r.recommended_role_mix.manager,
+          approved_headcount: crewCount(v.rec.recommended_role_mix),
+          approved_cost: v.rec.recommended_cost,
+          approved_role_cook: v.rec.recommended_role_mix.cook,
+          approved_role_cashier: v.rec.recommended_role_mix.cashier,
+          approved_role_shift_lead: v.rec.recommended_role_mix.shift_lead,
+          approved_role_manager: v.rec.recommended_role_mix.manager,
+          overridden_revenue: v.revenue,
         })),
         override_reason: reason || null,
       })

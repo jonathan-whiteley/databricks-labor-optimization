@@ -76,12 +76,53 @@ export default function App() {
     return m
   }, [fQuery.data])
 
+  // Strip the approval overlay — baseline must remain the AI model's output
+  // so deltas read meaningfully.
   const baselineRecs: Partial<Record<DayPartId, DayPartRec>> = useMemo(() => {
     if (!rQuery.data) return {}
     const m: Partial<Record<DayPartId, DayPartRec>> = {}
-    for (const d of rQuery.data.day_parts) m[d.day_part as DayPartId] = d
+    for (const d of rQuery.data.day_parts) {
+      m[d.day_part as DayPartId] = {
+        day_part: d.day_part,
+        recommended_headcount: d.recommended_headcount,
+        recommended_cost: d.recommended_cost,
+        recommended_role_mix: d.recommended_role_mix,
+      }
+    }
     return m
   }, [rQuery.data])
+
+  // When the rec query lands, seed local overrides for any day-part with a
+  // persisted approval where the approved revenue meaningfully differs from
+  // the AI forecast (otherwise the manager just rubber-stamped the AI plan
+  // and there's nothing to flag as "Adjusted"). Seeding both `overrides`
+  // (revenue) AND `overrideRecs` (crew/cost/role mix) avoids a network
+  // round-trip on initial render.
+  useEffect(() => {
+    if (!rQuery.data || !fQuery.data) return
+    const baselineByDp = new Map<string, number>(
+      fQuery.data.day_parts.map(f => [f.day_part, f.predicted_revenue])
+    )
+    const newOverrides: Partial<Record<DayPartId, number>> = {}
+    const newOverrideRecs: Partial<Record<DayPartId, DayPartRec>> = {}
+    for (const d of rQuery.data.day_parts) {
+      const base = baselineByDp.get(d.day_part)
+      if (!d.approved || base == null) continue
+      if (Math.round(d.approved.revenue) === Math.round(base)) continue
+      const dp = d.day_part as DayPartId
+      newOverrides[dp] = d.approved.revenue
+      newOverrideRecs[dp] = {
+        day_part: d.day_part,
+        recommended_headcount: d.approved.headcount,
+        recommended_cost: d.approved.cost,
+        recommended_role_mix: d.approved.role_mix,
+      }
+    }
+    if (Object.keys(newOverrides).length > 0) {
+      setOverrides(newOverrides)
+      setOverrideRecs(newOverrideRecs)
+    }
+  }, [rQuery.data, fQuery.data])
 
   // Commit is the explicit "I'm done editing" signal (Enter / blur), so we
   // fire recompute synchronously — no debounce. Each day-part is tracked by
@@ -285,8 +326,13 @@ export default function App() {
               date={date}
               perDayPart={
                 Object.fromEntries(
-                  DAYPART_IDS.map(dp => [dp, currentRec(dp)!]).filter(([, r]) => r)
-                ) as Record<string, DayPartRec>
+                  DAYPART_IDS.flatMap(dp => {
+                    const rec = currentRec(dp)
+                    const rev = overrides[dp] ?? baselineRevs[dp]
+                    if (!rec || rev == null) return []
+                    return [[dp, { rec, revenue: rev }]]
+                  })
+                )
               }
               totals={totals}
               overrideCount={overrideCount}

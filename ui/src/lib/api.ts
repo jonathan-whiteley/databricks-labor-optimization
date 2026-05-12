@@ -6,11 +6,19 @@ export type Store = { store_id: number; store_name: string; region: string; stat
 export type DayPartForecast = { day_part: string; predicted_revenue: number; predicted_transactions: number }
 export type ForecastResponse = { store_id: number; forecast_date: string; day_parts: DayPartForecast[] }
 export type RoleMix = { cook: number; cashier: number; shift_lead: number; manager: number }
+export type ApprovedSchedule = {
+  revenue: number
+  headcount: number
+  cost: number
+  role_mix: RoleMix
+}
+
 export type DayPartRec = {
   day_part: string
   recommended_headcount: number
   recommended_cost: number
   recommended_role_mix: RoleMix
+  approved?: ApprovedSchedule | null
 }
 export type RecommendationResponse = {
   store_id: number

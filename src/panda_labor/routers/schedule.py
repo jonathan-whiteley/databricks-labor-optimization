@@ -16,6 +16,7 @@ class DayPartApproval(BaseModel):
     approved_role_cashier: int = Field(ge=0)
     approved_role_shift_lead: int = Field(ge=0)
     approved_role_manager: int = Field(ge=0)
+    overridden_revenue: float | None = None
 
 
 class SaveScheduleRequest(BaseModel):
@@ -48,15 +49,15 @@ async def save_schedule(
                         approved_headcount, approved_cost,
                         approved_role_cook, approved_role_cashier,
                         approved_role_shift_lead, approved_role_manager,
-                        approved_by, override_reason
-                    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+                        approved_by, override_reason, overridden_revenue
+                    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
                     RETURNING schedule_id
                     """,
                     req.store_id, req.schedule_date, dp.day_part,
                     dp.approved_headcount, dp.approved_cost,
                     dp.approved_role_cook, dp.approved_role_cashier,
                     dp.approved_role_shift_lead, dp.approved_role_manager,
-                    approved_by, req.override_reason,
+                    approved_by, req.override_reason, dp.overridden_revenue,
                 )
                 ids.append(row["schedule_id"])
             return SaveScheduleResponse(schedule_ids=ids)

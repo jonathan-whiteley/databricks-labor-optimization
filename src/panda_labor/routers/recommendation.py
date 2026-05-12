@@ -16,11 +16,24 @@ class RoleMix(BaseModel):
     manager: int
 
 
+class ApprovedSchedule(BaseModel):
+    revenue: float
+    headcount: int
+    cost: float
+    role_mix: RoleMix
+
+
 class DayPartRecommendation(BaseModel):
     day_part: str
+    # Always the model's baseline rec at the forecast revenue.
     recommended_headcount: int
     recommended_cost: float
     recommended_role_mix: RoleMix
+    # If the GM has approved a schedule for this day-part, these reflect
+    # what they locked in (which may differ from the baseline). The frontend
+    # renders `approved` over `recommended` when present, and uses
+    # `recommended` as the "vs AI forecast" anchor for deltas.
+    approved: ApprovedSchedule | None = None
 
 
 class RecommendationResponse(BaseModel):
@@ -61,7 +74,8 @@ async def get_recommendation(store_id: int, forecast_date: date) -> Recommendati
                    day_part,
                    approved_headcount, approved_cost,
                    approved_role_cook, approved_role_cashier,
-                   approved_role_shift_lead, approved_role_manager
+                   approved_role_shift_lead, approved_role_manager,
+                   overridden_revenue
             FROM schedules
             WHERE store_id = $1 AND schedule_date = $2
             ORDER BY day_part, approved_ts DESC
@@ -76,25 +90,29 @@ async def get_recommendation(store_id: int, forecast_date: date) -> Recommendati
     parts: list[DayPartRecommendation] = []
     for r in rows:
         a = approved_by_dp.get(r["day_part"])
-        if a is not None:
-            parts.append(DayPartRecommendation(
-                day_part=r["day_part"],
-                recommended_headcount=a["approved_headcount"],
-                recommended_cost=a["approved_cost"],
-                recommended_role_mix=RoleMix(
+        approved: ApprovedSchedule | None = None
+        # Only surface the approval if we have the revenue context for it —
+        # without it the UI can't reconcile crew+cost against a meaningful
+        # baseline. Older rows pre-dating overridden_revenue are ignored.
+        if a is not None and a["overridden_revenue"] is not None:
+            approved = ApprovedSchedule(
+                revenue=a["overridden_revenue"],
+                headcount=a["approved_headcount"],
+                cost=a["approved_cost"],
+                role_mix=RoleMix(
                     cook=a["approved_role_cook"],
                     cashier=a["approved_role_cashier"],
                     shift_lead=a["approved_role_shift_lead"],
                     manager=a["approved_role_manager"],
                 ),
-            ))
-        else:
-            parts.append(DayPartRecommendation(
-                day_part=r["day_part"],
-                recommended_headcount=r["recommended_headcount"],
-                recommended_cost=r["recommended_cost"],
-                recommended_role_mix=_parse_role_mix(r["recommended_role_mix"]),
-            ))
+            )
+        parts.append(DayPartRecommendation(
+            day_part=r["day_part"],
+            recommended_headcount=r["recommended_headcount"],
+            recommended_cost=r["recommended_cost"],
+            recommended_role_mix=_parse_role_mix(r["recommended_role_mix"]),
+            approved=approved,
+        ))
     return RecommendationResponse(
         store_id=store_id, forecast_date=forecast_date,
         generated_ts=rows[0]["generated_ts"], day_parts=parts,
