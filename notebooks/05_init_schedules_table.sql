@@ -5,11 +5,16 @@
 -- the four `*_synced` tables that Lakebase populates from Unity Catalog.
 --
 -- Apply via psql against the `panda_labor` database on the Lakebase
--- instance `dev_jonathan_whiteley_panda-labor-db`. Mint a credential with
+-- instance `panda-labor-db`. Mint a credential with
 -- `databricks database generate-database-credential` and connect with
 -- `sslmode=require`.
+--
+-- The table is created in the `panda` schema so the FastAPI search_path
+-- (panda) resolves it without a qualifier. The four `*_synced` read tables
+-- also live in `panda`, populated by the synced_database_tables resources
+-- in resources/lakebase.yml.
 
-CREATE TABLE IF NOT EXISTS schedules (
+CREATE TABLE IF NOT EXISTS panda.schedules (
   schedule_id              BIGSERIAL PRIMARY KEY,
   store_id                 INTEGER NOT NULL,
   schedule_date            DATE NOT NULL,
@@ -27,4 +32,19 @@ CREATE TABLE IF NOT EXISTS schedules (
 );
 
 CREATE INDEX IF NOT EXISTS schedules_store_date_idx
-  ON schedules (store_id, schedule_date);
+  ON panda.schedules (store_id, schedule_date);
+
+-- App SP needs Postgres grants on the panda schema. The bundle cannot
+-- declare these (no DAB resource type for Lakebase grants), so apply them
+-- after the App and synced tables exist:
+--
+--   GRANT USAGE ON SCHEMA panda TO "<app_sp_client_id_uuid>";
+--   GRANT SELECT ON panda.stores_synced,
+--                   panda.sales_forecasts_synced,
+--                   panda.labor_recommendations_synced,
+--                   panda.staffing_targets_synced
+--     TO "<app_sp_client_id_uuid>";
+--   GRANT SELECT, INSERT, UPDATE, DELETE ON panda.schedules
+--     TO "<app_sp_client_id_uuid>";
+--   GRANT USAGE, SELECT ON SEQUENCE panda.schedules_schedule_id_seq
+--     TO "<app_sp_client_id_uuid>";
