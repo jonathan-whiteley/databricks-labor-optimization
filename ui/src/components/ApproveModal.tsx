@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { C, theme, fmt$ } from "@/lib/theme"
+import { C, theme, fmt$, crewCount } from "@/lib/theme"
 import { Icon } from "./Icon"
 import { saveSchedule, type DayPartRec, type Store } from "@/lib/api"
 
@@ -33,7 +33,7 @@ export function ApproveModal({
         schedule_date: date,
         day_parts: Object.entries(perDayPart).map(([dp, r]) => ({
           day_part: dp,
-          approved_headcount: r.recommended_headcount,
+          approved_headcount: crewCount(r.recommended_role_mix),
           approved_cost: r.recommended_cost,
           approved_role_cook: r.recommended_role_mix.cook,
           approved_role_cashier: r.recommended_role_mix.cashier,

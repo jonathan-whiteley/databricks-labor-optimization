@@ -4,7 +4,7 @@ import {
   listStores, getForecast, getRecommendation, recompute,
   type DayPartRec,
 } from "@/lib/api"
-import { C, DAYPART_IDS, theme, fmt$, type DayPartId } from "@/lib/theme"
+import { C, DAYPART_IDS, theme, fmt$, crewCount, type DayPartId } from "@/lib/theme"
 import { Header } from "@/components/Header"
 import { DayBanner } from "@/components/DayBanner"
 import { DaypartCard } from "@/components/DayPartCard"
@@ -121,11 +121,11 @@ export default function App() {
       predRev += curR
       if (baseRec) {
         baseCost += baseRec.recommended_cost
-        baseHc += baseRec.recommended_headcount
+        baseHc += crewCount(baseRec.recommended_role_mix)
       }
       if (curRec) {
         predCost += curRec.recommended_cost
-        headcount += curRec.recommended_headcount
+        headcount += crewCount(curRec.recommended_role_mix)
       }
     }
     return { predRev, predCost, baseRev, baseCost, headcount, baseHc }

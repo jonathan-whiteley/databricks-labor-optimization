@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { C, DP_THEME, HOUR_CURVE, fmt$, fmt$k, type DayPartId } from "@/lib/theme"
+import { C, DP_THEME, HOUR_CURVE, fmt$, fmt$k, crewCount, type DayPartId } from "@/lib/theme"
 import type { RoleMix } from "@/lib/api"
 import { Icon } from "./Icon"
 import { LaborPctRing } from "./LaborPctRing"
@@ -36,7 +36,9 @@ export function DaypartCard({
 
   const revenue = override ?? baselineRevenue
   const isOverridden = override != null
-  const hcDelta = currentRec.recommended_headcount - baselineRec.recommended_headcount
+  const curHc = crewCount(currentRec.recommended_role_mix)
+  const baseHc = crewCount(baselineRec.recommended_role_mix)
+  const hcDelta = curHc - baseHc
   const costDelta = currentRec.recommended_cost - baselineRec.recommended_cost
 
   useEffect(() => {
@@ -187,7 +189,7 @@ export function DaypartCard({
       }}>
         <Stat
           label="Crew"
-          value={String(currentRec.recommended_headcount)}
+          value={String(curHc)}
           delta={isOverridden ? hcDelta : null}
         />
         <Stat

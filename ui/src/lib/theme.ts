@@ -81,3 +81,10 @@ export const DAYPART_IDS: DayPartId[] = ["breakfast", "lunch", "dinner", "late"]
 export const fmt$ = (n: number) => "$" + Math.round(n).toLocaleString("en-US")
 export const fmt$k = (n: number) =>
   n >= 1000 ? "$" + (n / 1000).toFixed(1) + "k" : "$" + Math.round(n)
+
+// The served pyfunc model occasionally returns a `recommended_headcount`
+// that disagrees with the sum of `recommended_role_mix`. The role mix is
+// what shows on the floor — treat it as the source of truth.
+export function crewCount(roles: { cook: number; cashier: number; shift_lead: number; manager: number }): number {
+  return roles.cook + roles.cashier + roles.shift_lead + roles.manager
+}
