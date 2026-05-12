@@ -184,6 +184,10 @@ export function DaypartCard({
         )}
       </div>
 
+      <div style={{ padding: "8px 20px 14px" }}>
+        <LaborPctRing pct={revenue > 0 ? currentRec.recommended_cost / revenue : 0} />
+      </div>
+
       <div style={{
         padding: "0 20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
       }}>
@@ -198,10 +202,6 @@ export function DaypartCard({
           delta={isOverridden ? costDelta : null}
           isMoney
         />
-      </div>
-
-      <div style={{ padding: "14px 20px 0" }}>
-        <LaborPctRing pct={revenue > 0 ? currentRec.recommended_cost / revenue : 0} />
       </div>
 
       <div style={{ padding: "14px 20px 4px" }}>
