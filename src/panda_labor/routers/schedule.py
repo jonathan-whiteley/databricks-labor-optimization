@@ -1,4 +1,5 @@
-"""POST /api/schedule/save - write approved schedule to Lakebase."""
+"""POST /api/schedule/save - write approved schedule to Lakebase.
+DELETE /api/schedule/{store_id}/{date}/{day_part} - revert to AI forecast."""
 from datetime import date
 from typing import Annotated
 from fastapi import APIRouter, Header, HTTPException
@@ -6,6 +7,8 @@ from pydantic import BaseModel, Field
 from ..lakebase import conn
 
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
+
+ALLOWED_DAY_PARTS = ("breakfast", "lunch", "dinner", "late")
 
 
 class DayPartApproval(BaseModel):
@@ -61,3 +64,30 @@ async def save_schedule(
                 )
                 ids.append(row["schedule_id"])
             return SaveScheduleResponse(schedule_ids=ids)
+
+
+class DeleteResponse(BaseModel):
+    deleted: int
+
+
+@router.delete("/{store_id}/{schedule_date}/{day_part}", response_model=DeleteResponse)
+async def delete_day_part_approval(
+    store_id: int, schedule_date: date, day_part: str,
+) -> DeleteResponse:
+    """Wipe every approval row for one (store, date, day_part). The Reset
+    button on an Adjusted card calls this so the AI forecast re-surfaces
+    on next read. Idempotent — returns 200 with deleted=0 when nothing
+    matches."""
+    if day_part not in ALLOWED_DAY_PARTS:
+        raise HTTPException(400, f"Invalid day_part: {day_part}")
+    async with conn() as c:
+        result = await c.execute(
+            """
+            DELETE FROM schedules
+            WHERE store_id = $1 AND schedule_date = $2 AND day_part = $3
+            """,
+            store_id, schedule_date, day_part,
+        )
+    # asyncpg returns "DELETE <n>" for non-SELECTs
+    n = int(result.split()[-1]) if result and result.startswith("DELETE") else 0
+    return DeleteResponse(deleted=n)

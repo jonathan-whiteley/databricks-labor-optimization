@@ -36,3 +36,5 @@ export const recompute = (body: { store_id: number; day_part: string; projected_
   api.post<DayPartRec>("/recommendation/recompute", body).then(r => r.data)
 export const saveSchedule = (body: object) =>
   api.post<{ schedule_ids: number[] }>("/schedule/save", body).then(r => r.data)
+export const deleteScheduleDayPart = (storeId: number, date: string, dayPart: string) =>
+  api.delete<{ deleted: number }>(`/schedule/${storeId}/${date}/${dayPart}`).then(r => r.data)

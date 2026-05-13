@@ -59,6 +59,12 @@ class PandaLaborModel(mlflow.pyfunc.PythonModel):
             add_cook = round(remaining * 0.55)
             cook += add_cook
             cashier += (remaining - add_cook)
+            # Invariant the UI relies on (and tests/test_labor_formula.py pins):
+            # cook + cashier + shift_lead + manager == recommended_headcount.
+            assert cook + cashier + lead + mgr == hc, (
+                f"role mix breaks the headcount invariant: hc={hc}, "
+                f"cook={cook}, cashier={cashier}, lead={lead}, mgr={mgr}"
+            )
             cost = round(hc * self.AVG_RATE * self.HOURS_PER_DP, 2)
             rows.append({
                 "recommended_headcount": hc,

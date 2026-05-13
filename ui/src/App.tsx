@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   listStores, getForecast, getRecommendation, recompute,
-  type DayPartRec,
+  deleteScheduleDayPart, type DayPartRec,
 } from "@/lib/api"
 import { C, DAYPART_IDS, theme, fmt$, crewCount, type DayPartId } from "@/lib/theme"
 import { Header } from "@/components/Header"
@@ -103,24 +103,28 @@ export default function App() {
     const baselineByDp = new Map<string, number>(
       fQuery.data.day_parts.map(f => [f.day_part, f.predicted_revenue])
     )
-    const newOverrides: Partial<Record<DayPartId, number>> = {}
-    const newOverrideRecs: Partial<Record<DayPartId, DayPartRec>> = {}
+    const seededOverrides: Partial<Record<DayPartId, number>> = {}
+    const seededRecs: Partial<Record<DayPartId, DayPartRec>> = {}
     for (const d of rQuery.data.day_parts) {
       const base = baselineByDp.get(d.day_part)
       if (!d.approved || base == null) continue
       if (Math.round(d.approved.revenue) === Math.round(base)) continue
       const dp = d.day_part as DayPartId
-      newOverrides[dp] = d.approved.revenue
-      newOverrideRecs[dp] = {
+      seededOverrides[dp] = d.approved.revenue
+      seededRecs[dp] = {
         day_part: d.day_part,
         recommended_headcount: d.approved.headcount,
         recommended_cost: d.approved.cost,
         recommended_role_mix: d.approved.role_mix,
       }
     }
-    if (Object.keys(newOverrides).length > 0) {
-      setOverrides(newOverrides)
-      setOverrideRecs(newOverrideRecs)
+    // Merge, never wipe: a partial invalidate (e.g. a single-day-part DELETE)
+    // shouldn't clobber other day-parts' local edits. Day-parts the server
+    // no longer has an approval for stay as they are — clearOverride() did
+    // the local clear before the invalidate landed.
+    if (Object.keys(seededOverrides).length > 0) {
+      setOverrides(prev => ({ ...prev, ...seededOverrides }))
+      setOverrideRecs(prev => ({ ...prev, ...seededRecs }))
     }
   }, [rQuery.data, fQuery.data])
 
@@ -140,10 +144,17 @@ export default function App() {
     setOverrides(prev => ({ ...prev, [dp]: v }))
     fireRecompute(dp, v)
   }
+  // Reset on a day-part: clear local override AND wipe any server-persisted
+  // approval row, so the AI forecast resurfaces on next reload. The DELETE
+  // is idempotent — returns 200 with deleted=0 when the row was local-only.
   const clearOverride = (dp: DayPartId) => {
     setOverrides(prev => { const x = { ...prev }; delete x[dp]; return x })
     setOverrideRecs(prev => { const x = { ...prev }; delete x[dp]; return x })
     setRecomputing(prev => { const x = { ...prev }; delete x[dp]; return x })
+    if (storeId === null) return
+    deleteScheduleDayPart(storeId, date, dp)
+      .then(() => qc.invalidateQueries({ queryKey: ["rec", storeId, date] }))
+      .catch(() => { /* network blip — local clear already applied */ })
   }
   const anyPending = Object.values(recomputing).some(Boolean)
   const overrideCount = Object.keys(overrides).length
