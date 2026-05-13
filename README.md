@@ -1,4 +1,4 @@
-# Databricks Labor Optimization
+# Databricks RCT Labor Optimization
 
 [![Deploy with DABS](https://img.shields.io/badge/Deploy%20with-Databricks%20Asset%20Bundles-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com/aws/en/dev-tools/bundles/)
 [![ai_forecast](https://img.shields.io/badge/Forecasting-ai__forecast-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_forecast)
@@ -8,7 +8,7 @@
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-> A demo-ready labor planning app for retail, restaurant, and hospitality operators on Databricks. Forecast sales by day-part with `ai_forecast`, recommend store-level staffing from a custom pyfunc, let managers override forecasts and pin headcount with live recompute, and persist approved schedules to Lakebase. One bundle deploys the job, the model endpoint, the app, the Lakebase instance, and the Genie space.
+> A demo-ready labor planning app for retail, restaurant, and hospitality (RCT) operators on Databricks. Forecast sales by day-part with `ai_forecast`, recommend store-level staffing from a custom pyfunc, let managers override forecasts and pin headcount with live recompute, and persist approved schedules to Lakebase. One bundle deploys the job, the model endpoint, the app, the Lakebase instance, and the Genie space.
 
 ## What's Inside
 
