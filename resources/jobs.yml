@@ -13,6 +13,15 @@ resources:
           notebook_task:
             notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/04_run_recommendations
           environment_key: default
+        # Reapplies the Genie space spec (idempotent: PATCH when var.genie_space_id
+        # is set, CREATE otherwise — first run prints the ID to pin in databricks.yml).
+        # No DAB resource type for Genie spaces yet; this notebook is the artifact.
+        - task_key: ensure_genie_space
+          notebook_task:
+            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/06_ensure_genie_space
+            base_parameters:
+              space_id: ${var.genie_space_id}
+          environment_key: default
       environments:
         - environment_key: default
           spec:

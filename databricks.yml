@@ -23,6 +23,13 @@ variables:
   user_email:
     description: Owner email
     default: jonathan.whiteley@databricks.com
+  genie_space_id:
+    description: |
+      Panda Labor Planner Genie space ID. Drives the Ask Genie iframe and is
+      the input to notebooks/06_ensure_genie_space.py for PATCH semantics.
+      Leave blank to have the notebook create a new space and print its ID,
+      then pin it here.
+    default: 01f14e48463113eda51eff62f704947a
 
 include:
   - resources/*.yml
