@@ -62,47 +62,89 @@ INSTRUCTIONS = (
 )
 
 SAMPLE_QUESTIONS = [
-    "How did my labor % compare to my region last week?",
-    "Which day-parts have the highest labor cost as a share of sales this month?",
-    "Top 5 stores by labor variance in LA Metro this week.",
-    "What was last Friday's predicted vs. actual revenue at Store #0001?",
-    "Show forecasted lunch revenue for tomorrow across all California stores.",
-    "Which stores ran above the 26% labor target last week?",
-    "Compare actual revenue trend for Store #0007 over the last 14 days.",
+    "What's tomorrow's total predicted revenue across all stores?",
+    "Show predicted revenue by day-part for tomorrow",
+    "Which 5 stores have the highest forecasted labor % for tomorrow?",
+    "What's the chain-wide labor cost % forecast for each of the next 7 days?",
+    "Which regions have the highest forecasted labor cost % for tomorrow?",
 ]
 
 EXAMPLE_SQLS = [
     {
-        "title": "Tomorrow's labor% by day-part for one store",
+        "title": "Total predicted revenue across all stores tomorrow",
         "sql": (
-            "SELECT r.day_part, r.recommended_cost AS labor_cost, "
-            "f.predicted_revenue AS forecast_revenue, "
-            "ROUND(100.0 * r.recommended_cost / f.predicted_revenue, 1) AS labor_pct "
-            f"FROM {CATALOG}.{SCHEMA}.labor_recommendations r "
-            f"JOIN {CATALOG}.{SCHEMA}.sales_forecasts f "
-            "USING (store_id, forecast_date, day_part) "
-            "WHERE r.store_id = 1 AND r.forecast_date = current_date() + 1 "
-            "ORDER BY CASE r.day_part WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 "
+            "SELECT SUM(predicted_revenue) AS total_predicted_revenue "
+            f"FROM {CATALOG}.{SCHEMA}.sales_forecasts "
+            "WHERE forecast_date = current_date() + 1"
+        ),
+    },
+    {
+        "title": "Predicted revenue by day-part for tomorrow",
+        "sql": (
+            "SELECT day_part, SUM(predicted_revenue) AS predicted_revenue "
+            f"FROM {CATALOG}.{SCHEMA}.sales_forecasts "
+            "WHERE forecast_date = current_date() + 1 "
+            "GROUP BY day_part "
+            "ORDER BY CASE day_part WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 "
             "WHEN 'dinner' THEN 3 ELSE 4 END"
         ),
     },
     {
-        "title": "Top 5 stores by labor variance this week (West region)",
+        "title": "Top 5 stores by forecasted labor % tomorrow",
         "sql": (
             "WITH joined AS ("
-            "SELECT d.store_id, d.store_name, d.region, "
-            "SUM(d.total_revenue) AS actual_rev, "
-            "SUM(r.recommended_cost) AS planned_labor "
-            f"FROM {CATALOG}.{SCHEMA}.daily_store_revenue d "
-            f"JOIN {CATALOG}.{SCHEMA}.labor_recommendations r "
-            "ON r.store_id = d.store_id AND r.forecast_date = d.sale_date "
-            "WHERE d.sale_date >= current_date() - INTERVAL 7 DAYS "
-            "AND d.region = 'West' "
-            "GROUP BY d.store_id, d.store_name, d.region) "
-            "SELECT store_id, store_name, "
-            "ROUND(100.0 * planned_labor / actual_rev, 1) AS labor_pct, "
-            "ROUND(actual_rev, 0) AS revenue "
-            "FROM joined ORDER BY labor_pct DESC LIMIT 5"
+            "SELECT r.store_id, "
+            "SUM(r.recommended_cost) AS labor_cost, "
+            "SUM(f.predicted_revenue) AS forecast_revenue "
+            f"FROM {CATALOG}.{SCHEMA}.labor_recommendations r "
+            f"JOIN {CATALOG}.{SCHEMA}.sales_forecasts f "
+            "USING (store_id, forecast_date, day_part) "
+            "WHERE r.forecast_date = current_date() + 1 "
+            "GROUP BY r.store_id) "
+            "SELECT store_id, "
+            "ROUND(100.0 * labor_cost / forecast_revenue, 2) AS labor_pct, "
+            "ROUND(forecast_revenue, 0) AS forecast_revenue "
+            "FROM joined "
+            "ORDER BY labor_pct DESC "
+            "LIMIT 5"
+        ),
+    },
+    {
+        "title": "Chain-wide labor cost % for each of the next 7 days",
+        "sql": (
+            "SELECT r.forecast_date, "
+            "ROUND(100.0 * SUM(r.recommended_cost) / NULLIF(SUM(f.predicted_revenue), 0), 2) "
+            "AS labor_pct "
+            f"FROM {CATALOG}.{SCHEMA}.labor_recommendations r "
+            f"JOIN {CATALOG}.{SCHEMA}.sales_forecasts f "
+            "USING (store_id, forecast_date, day_part) "
+            "WHERE r.forecast_date BETWEEN current_date() AND current_date() + 7 "
+            "GROUP BY r.forecast_date "
+            "ORDER BY r.forecast_date"
+        ),
+    },
+    {
+        "title": "Region labor % tomorrow (DISTINCT store-region join to avoid duplication)",
+        "sql": (
+            "WITH store_region AS ("
+            "SELECT DISTINCT store_id, region "
+            f"FROM {CATALOG}.{SCHEMA}.daily_store_revenue "
+            "WHERE region IS NOT NULL), "
+            "joined AS ("
+            "SELECT sr.region, "
+            "SUM(r.recommended_cost) AS labor_cost, "
+            "SUM(f.predicted_revenue) AS forecast_revenue "
+            f"FROM {CATALOG}.{SCHEMA}.labor_recommendations r "
+            f"JOIN {CATALOG}.{SCHEMA}.sales_forecasts f "
+            "USING (store_id, forecast_date, day_part) "
+            "JOIN store_region sr ON sr.store_id = r.store_id "
+            "WHERE r.forecast_date = current_date() + 1 "
+            "GROUP BY sr.region) "
+            "SELECT region, "
+            "ROUND(100.0 * labor_cost / forecast_revenue, 2) AS labor_pct, "
+            "ROUND(forecast_revenue, 0) AS forecast_revenue "
+            "FROM joined "
+            "ORDER BY labor_pct DESC"
         ),
     },
 ]
@@ -115,6 +157,19 @@ TABLES = [
 
 
 def build_serialized_space() -> dict:
+    # The Genie export proto rejects unsorted id lists, so generate ids then
+    # sort each collection by id before serializing.
+    example_sqls = sorted(
+        [
+            {"id": uuid4().hex, "question": [e["title"]], "sql": [e["sql"]]}
+            for e in EXAMPLE_SQLS
+        ],
+        key=lambda x: x["id"],
+    )
+    sample_qs = sorted(
+        [{"id": uuid4().hex, "question": [q]} for q in SAMPLE_QUESTIONS],
+        key=lambda x: x["id"],
+    )
     return {
         "version": 2,
         "data_sources": {
@@ -125,16 +180,9 @@ def build_serialized_space() -> dict:
         },
         "instructions": {
             "text_instructions": [{"id": uuid4().hex, "content": [INSTRUCTIONS]}],
-            "example_question_sqls": [
-                {"id": uuid4().hex, "question": [e["title"]], "sql": [e["sql"]]}
-                for e in EXAMPLE_SQLS
-            ],
+            "example_question_sqls": example_sqls,
         },
-        "config": {
-            "sample_questions": [
-                {"id": uuid4().hex, "question": [q]} for q in SAMPLE_QUESTIONS
-            ]
-        },
+        "config": {"sample_questions": sample_qs},
     }
 
 

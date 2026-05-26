@@ -33,7 +33,9 @@ async def call_labor_endpoint(
             }
         ]
     }
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    # Endpoint is scale-to-zero; cold-start can take 30-90s on a pyfunc.
+    # Read timeout absorbs the cold path; connect timeout stays tight.
+    async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=5.0)) as client:
         r = await client.post(url, json=payload, headers=_auth_headers())
         r.raise_for_status()
         return r.json()["predictions"][0]

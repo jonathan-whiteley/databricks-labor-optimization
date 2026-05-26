@@ -22,3 +22,5 @@ env:
     value: dev_jonathan_whiteley_panda-labor-rec-v1
   - name: USER_EMAIL
     value: jonathan.whiteley@databricks.com
+  - name: GENIE_SPACE_ID
+    value: 01f14e48463113eda51eff62f704947a

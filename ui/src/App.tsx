@@ -14,7 +14,7 @@ import { AskGenie } from "@/components/AskGenie"
 import { Toast } from "@/components/Toast"
 import { Icon } from "@/components/Icon"
 
-const STORE_KEY = "panda.selectedStoreId"
+const STORE_KEY = "lakehouse.selectedStoreId"
 const CONFIDENCE_BY_DP: Record<DayPartId, number> = {
   breakfast: 0.08, lunch: 0.06, dinner: 0.07, late: 0.12,
 }
@@ -63,7 +63,7 @@ export default function App() {
   const [lastRun, setLastRun] = useState("5 min ago")
   const [askOpen, setAskOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null)
 
   useEffect(() => {
     setOverrides({}); setOverrideRecs({}); setRecomputing({})
@@ -136,7 +136,15 @@ export default function App() {
     setRecomputing(prev => ({ ...prev, [dp]: true }))
     recompute({ store_id: storeId, day_part: dp, projected_sales: sales })
       .then(r => setOverrideRecs(prev => ({ ...prev, [dp]: r })))
-      .catch(() => { /* keep previous values */ })
+      .catch(() => {
+        // Most common cause is the serving endpoint cold-starting past our
+        // httpx timeout. Surface it so the user knows the override didn't
+        // recompute, and keeps previous values.
+        setToast({
+          message: "Couldn't recompute the plan. The labor model may be warming up; try again in a moment.",
+          tone: "error",
+        })
+      })
       .finally(() => setRecomputing(prev => ({ ...prev, [dp]: false })))
   }
 
@@ -194,7 +202,10 @@ export default function App() {
     qc.invalidateQueries({ queryKey: ["rec", storeId, date] })
     setSaveOpen(false)
     setOverrides({}); setOverrideRecs({}); setRecomputing({})
-    setToast(`Tomorrow's plan locked in — ${fmt$(totals.predCost)} labor, ${totals.headcount} crew.`)
+    setToast({
+      message: `Tomorrow's plan locked in: ${fmt$(totals.predCost)} labor, ${totals.headcount} crew.`,
+      tone: "success",
+    })
   }
 
   const ready = storeId !== null && fQuery.data && rQuery.data
@@ -375,7 +386,13 @@ export default function App() {
 
       <AskGenie open={askOpen} onClose={() => setAskOpen(false)} />
 
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          tone={toast.tone}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </>
   )
 }

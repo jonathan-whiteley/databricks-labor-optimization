@@ -17,10 +17,10 @@ export interface DayPartTheme {
 }
 
 export interface Theme {
-  brand: string                     // machine slug, e.g. "panda"
+  brand: string                     // machine slug, e.g. "lakehouse"
   wordmark: { lead: string; accent: string }
   appTagline: string                // e.g. "Daily Planner"
-  logoPath: string                  // public path, e.g. "/panda-logo.svg"
+  logoPath: string                  // public path, e.g. "/logo.svg"
   palette: {
     primary: string                 // brand-lead red / hue used for hero and CTAs
     primaryDark: string
@@ -64,13 +64,14 @@ export interface Theme {
 }
 
 import { pandaTheme } from "./themes/panda"
+import { lakehouseTheme } from "./themes/lakehouse"
 
-const REGISTRY: Record<string, Theme> = { panda: pandaTheme }
+const REGISTRY: Record<string, Theme> = { panda: pandaTheme, lakehouse: lakehouseTheme }
 
 const brandKey =
-  (import.meta.env.VITE_BRAND as string | undefined) ?? "panda"
+  (import.meta.env.VITE_BRAND as string | undefined) ?? "lakehouse"
 
-export const theme: Theme = REGISTRY[brandKey] ?? pandaTheme
+export const theme: Theme = REGISTRY[brandKey] ?? lakehouseTheme
 
 // Convenience re-exports so call sites stay short.
 export const C = theme.palette

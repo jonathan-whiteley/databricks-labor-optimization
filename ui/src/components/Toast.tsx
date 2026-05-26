@@ -2,11 +2,22 @@ import { useEffect } from "react"
 import { C } from "@/lib/theme"
 import { Icon } from "./Icon"
 
-export function Toast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+type Tone = "success" | "error"
+
+export function Toast({
+  message,
+  onDismiss,
+  tone = "success",
+}: {
+  message: string
+  onDismiss: () => void
+  tone?: Tone
+}) {
   useEffect(() => {
     const t = setTimeout(onDismiss, 3500)
     return () => clearTimeout(t)
   }, [message, onDismiss])
+  const isErr = tone === "error"
   return (
     <div style={{
       position: "fixed", bottom: 24, left: "50%",
@@ -18,10 +29,11 @@ export function Toast({ message, onDismiss }: { message: string; onDismiss: () =
     }}>
       <span style={{
         width: 22, height: 22, borderRadius: "50%",
-        background: C.jade, display: "inline-flex",
+        background: isErr ? C.primary : C.jade,
+        display: "inline-flex",
         alignItems: "center", justifyContent: "center",
       }}>
-        <Icon name="check2" size={12} color="#fff" stroke={3} />
+        <Icon name={isErr ? "info" : "check2"} size={12} color="#fff" stroke={3} />
       </span>
       {message}
     </div>

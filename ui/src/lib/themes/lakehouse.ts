@@ -1,0 +1,56 @@
+import type { Theme } from "../theme"
+
+export const lakehouseTheme: Theme = {
+  brand: "lakehouse",
+  wordmark: { lead: "Lakehouse", accent: "Market" },
+  appTagline: "Daily Planner",
+  logoPath: "/logo.svg",
+  palette: {
+    primary:     "#D02C2F",
+    primaryDark: "#A01D20",
+    primaryDeep: "#7A1316",
+    cream:       "#FAF6EE",
+    creamDeep:   "#F2EBDC",
+    paper:       "#FFFFFF",
+    ink:         "#1F1A12",
+    ink2:        "#5C544A",
+    ink3:        "#9B9183",
+    line:        "#E5DDCB",
+    gold:        "#D9A441",
+    jade:        "#3D8B6B",
+  },
+  dayparts: {
+    breakfast: { tint: "#FFF4E1", deep: "#C2853A", icon: "sunrise", label: "Breakfast", time: "6 – 9 am",     blurb: "Early-bird traffic" },
+    lunch:     { tint: "#FFE7E0", deep: "#D02C2F", icon: "sun",     label: "Lunch",     time: "11 am – 3 pm", blurb: "Peak rush" },
+    dinner:    { tint: "#FFE0CD", deep: "#B85530", icon: "sunset",  label: "Dinner",    time: "4 – 8 pm",     blurb: "Family pickup" },
+    late:      { tint: "#E6DEE8", deep: "#5B4263", icon: "moon",    label: "Late",      time: "8 – 11 pm",    blurb: "Wind-down" },
+  },
+  hourCurves: {
+    breakfast: [0.2, 0.55, 1.0, 0.7],
+    lunch:     [0.3, 0.85, 1.0, 0.95, 0.6],
+    dinner:    [0.45, 0.9, 1.0, 0.7, 0.35],
+    late:      [0.85, 0.6, 0.3, 0.15],
+  },
+  greeting: { firstName: "Marisol", role: "General Manager", initials: "MR" },
+  laborTarget: { lo: 0.22, hi: 0.26, critical: 0.40 },
+  weatherChipDefault: "72°F · Sunny",
+  genie: {
+    title: "Ask Genie",
+    subtitle: "Your data assistant · powered by Databricks Genie",
+    greetingLine: "Hi Marisol — what would you like to know?",
+    suggested: [
+      { icon: "trend",   q: "What's tomorrow's total predicted revenue across all stores?" },
+      { icon: "flame",   q: "Show predicted revenue by day-part for tomorrow" },
+      { icon: "star",    q: "Which 5 stores have the highest forecasted labor % for tomorrow?" },
+      { icon: "history", q: "What's the chain-wide labor cost % forecast for each of the next 7 days?" },
+      { icon: "check2",  q: "Which regions have the highest forecasted labor cost % for tomorrow?" },
+    ],
+  },
+  recentDays: [
+    { date: "Mon May 5", forecast: "$10,140", approved: "$10,140", deltaCrew: "0",  deltaCost: "$0",    reason: "—",                              actual: "$10,210" },
+    { date: "Sun May 4", forecast: "$9,980",  approved: "$10,210", deltaCrew: "+1", deltaCost: "+$230", reason: "Mother's Day prep",              actual: "$10,180" },
+    { date: "Sat May 3", forecast: "$10,520", approved: "$10,710", deltaCrew: "+1", deltaCost: "+$190", reason: "Farmers market, busy lunch",     actual: "$10,620" },
+    { date: "Fri May 2", forecast: "$10,290", approved: "$10,520", deltaCrew: "+1", deltaCost: "+$230", reason: "High school graduation parties", actual: "$10,720" },
+    { date: "Thu May 1", forecast: "$9,810",  approved: "$9,810",  deltaCrew: "0",  deltaCost: "$0",    reason: "—",                              actual: "$9,750" },
+  ],
+}

@@ -38,3 +38,20 @@ export const saveSchedule = (body: object) =>
   api.post<{ schedule_ids: number[] }>("/schedule/save", body).then(r => r.data)
 export const deleteScheduleDayPart = (storeId: number, date: string, dayPart: string) =>
   api.delete<{ deleted: number }>(`/schedule/${storeId}/${date}/${dayPart}`).then(r => r.data)
+
+export type GenieTableColumn = { name: string; type: string }
+export type GenieTable = {
+  columns: GenieTableColumn[]
+  rows: (string | number | null)[][]
+  row_count: number
+  truncated: boolean
+}
+export type GenieResponse = {
+  conversation_id: string
+  message_id: string
+  text: string
+  sql?: string | null
+  table?: GenieTable | null
+}
+export const askGenie = (question: string, conversation_id?: string) =>
+  api.post<GenieResponse>("/genie/ask", { question, conversation_id }).then(r => r.data)

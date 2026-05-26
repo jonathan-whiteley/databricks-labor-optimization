@@ -18,6 +18,9 @@ class Settings(BaseModel):
         "SERVING_ENDPOINT_NAME", "dev_jonathan_whiteley_panda-labor-rec-v1"
     )
     user_email: str = os.getenv("USER_EMAIL", "jonathan.whiteley@databricks.com")
+    genie_space_id: str = os.getenv(
+        "GENIE_SPACE_ID", "01f14e48463113eda51eff62f704947a"
+    )
 
 
 @lru_cache

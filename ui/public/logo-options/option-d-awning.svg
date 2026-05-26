@@ -1,0 +1,6 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <path d="M14 30 L102 30 L114 60 L102 90 L14 90 Z" fill="#D02C2F"/>
+  <path d="M14 30 L102 30 L114 60 L102 90 L14 90 Z" fill="none" stroke="#A01D20" stroke-width="2"/>
+  <text x="54" y="74" font-family="DM Sans, sans-serif" font-size="48" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="-2">M</text>
+  <circle cx="22" cy="60" r="3" fill="#FAF6EE"/>
+</svg>
