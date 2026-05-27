@@ -1,4 +1,4 @@
-# Databricks RCT Labor Optimization
+# Labor IQ
 
 [![Deploy with DABS](https://img.shields.io/badge/Deploy%20with-Databricks%20Asset%20Bundles-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com/aws/en/dev-tools/bundles/)
 [![ai_forecast](https://img.shields.io/badge/Forecasting-ai__forecast-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_forecast)
@@ -9,6 +9,8 @@
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
 > A demo-ready labor planning app for retail, restaurant, and hospitality (RCT) operators on Databricks. Forecast sales by day-part with `ai_forecast`, recommend store-level staffing from a custom pyfunc, let managers override forecasts and pin headcount with live recompute, and persist approved schedules to Lakebase. One bundle deploys the job, the model endpoint, the app, the Lakebase instance, and the Genie space.
+
+**Live demo:** [labor-iq-66306676349647.aws.databricksapps.com](https://labor-iq-66306676349647.aws.databricksapps.com) (Lakehouse Market branding) · **AE demo script:** [DEMO.md](DEMO.md)
 
 ## What's Inside
 
@@ -114,11 +116,11 @@ Open the URL in your browser. The bundle wires the App's service principal with 
 uv sync                                                # Python deps
 cd ui && bun install && cd ..                          # Frontend deps
 LAKEBASE_INSTANCE_NAME=<your-instance> \
-  uvicorn panda_labor.app:app --reload --port 8000     # FastAPI
+  uvicorn labor_iq.app:app --reload --port 8000        # FastAPI
 cd ui && bun run dev                                   # Vite dev server with HMR
 ```
 
-The local backend uses your Databricks CLI profile to mint short-lived Lakebase OAuth tokens. Token rotation lives in `src/panda_labor/lakebase.py`.
+The local backend uses your Databricks CLI profile to mint short-lived Lakebase OAuth tokens. Token rotation lives in `src/labor_iq/lakebase.py`.
 
 ## Architecture
 
@@ -165,16 +167,16 @@ Reads in the app go to the four `*_synced` tables. Manager-approved schedules wr
 | `panda_labor_db` | Lakebase Database Instance | `CU_1` capacity |
 | `*_synced` | Synced Database Tables (×4) | `sales_forecasts`, `labor_recommendations`, `staffing_targets`, `stores` |
 
-Resource names default to `panda_*` (the original demo customer). Override them with bundle variables — see `databricks.yml`.
+Resource names default to `panda_*` (the original demo customer). Override them with bundle variables: see `databricks.yml`.
 
 <details>
 <summary><strong>Manager Workflow</strong></summary>
 
 1. Pick a store and a date in the app
 2. See the AI sales forecast and recommended headcount by day-part
-3. Override the forecast (e.g. promo day, weather) — recommendations recompute live against the endpoint
+3. Override the forecast (e.g. promo day, weather): recommendations recompute live against the endpoint
 4. Pin headcount directly if you disagree with the formula
-5. Approve — the schedule is written to the native PG `schedules` table, with the overridden revenue persisted alongside so the approval reconciles cleanly
+5. Approve: the schedule is written to the native PG `schedules` table, with the overridden revenue persisted alongside so the approval reconciles cleanly
 6. Reset reverts both the forecast override and any pinned headcount back to the AI baseline
 </details>
 
@@ -218,7 +220,7 @@ Only UC→PG synced tables are declarative in DABs today. There is no GA outboun
 │   ├── 04_run_recommendations.py
 │   ├── 05_init_schedules_table.sql
 │   └── 06_ensure_genie_space.py
-├── src/panda_labor/            # FastAPI backend
+├── src/labor_iq/               # FastAPI backend
 │   ├── app.py
 │   ├── lakebase.py             # asyncpg pool + OAuth token rotation
 │   └── model_client.py         # Serving endpoint client
@@ -232,7 +234,7 @@ Only UC→PG synced tables are declarative in DABs today. There is no GA outboun
 | Symptom | Fix |
 |---|---|
 | `bundle deploy` fails on Lakebase | Confirm the instance exists and the name matches `var.lakebase_instance` in `databricks.yml` |
-| App returns 401 from Lakebase | Connection user must match the identity that minted the OAuth token. See `src/panda_labor/lakebase.py` |
+| App returns 401 from Lakebase | Connection user must match the identity that minted the OAuth token. See `src/labor_iq/lakebase.py` |
 | App returns 403 calling the endpoint | The bundle wires `CAN_QUERY` for the App's SP; redeploy if you renamed the endpoint |
 | `ai_forecast` returns no rows | Confirm the SQL warehouse referenced in `resources/jobs.yml` exists and you have permission |
 | Genie iframe is blank | Run the `ensure_genie_space` task, pin the printed ID into `databricks.yml`, redeploy |
