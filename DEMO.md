@@ -15,10 +15,11 @@
 ### Beat 1: The GM's morning (60 sec)
 
 1. Open the app, pick a store.
-2. Point to the four day-part cards (Breakfast, Lunch, Dinner, Late) and the labor % donut.
-3. Click the predicted revenue on **Lunch**, bump it up 25%, watch headcount and labor % recompute live.
+2. Point to the four day-part cards (Breakfast, Lunch, Dinner, Late) and the labor % donut at the top.
+3. On the **Lunch** card, click **Override**. The "Predicted sales" field becomes editable.
+4. Type a higher number (e.g. bump it 25%) and **press Enter** (or click out). The card label flips to "Your estimate"; the recommended **headcount, role mix, and labor cost** update underneath; the chain-wide labor % at the top recalculates.
 
-> *"This is the GM's daily planner. Tomorrow's forecast is already computed; they override what the model can't see, like a graduation across the street, and the recommendation updates in real time."*
+> *"This is the GM's daily planner. Tomorrow's forecast is already computed. They override what the model can't see, like a graduation across the street, and the moment they submit the new revenue the recommended headcount and labor cost update against the live serving endpoint."*
 
 ### Beat 2: Lakebase, the audit trail (90 sec) [priority]
 

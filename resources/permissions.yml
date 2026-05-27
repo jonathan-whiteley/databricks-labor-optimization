@@ -1,16 +1,15 @@
 # UC schema-level grants for the App service principal.
 #
-# Originally we declared a `schemas:` resource here that adopted the existing
-# jdub_demo.panda schema and granted USE_SCHEMA + SELECT to the App SP via
-# `${resources.apps.panda_app.service_principal_name}`. That interpolation
-# resolves to a display-style string like "app-4hg19f panda-labor-planner"
-# (with a space), which is not a valid UC principal identifier; the deploy
-# failed with: "Could not find principal with name app-4hg19f
-# panda-labor-planner".
+# Originally we declared a `schemas:` resource here that adopted the demo UC
+# schema and granted USE_SCHEMA + SELECT to the App SP via
+# `${resources.apps.labor_iq_app.service_principal_name}`. That interpolation
+# resolves to a display-style string like "app-XXXXX labor-iq" (with a space),
+# which is not a valid UC principal identifier; the deploy failed with:
+# "Could not find principal with name app-XXXXX labor-iq".
 #
 # Fallback: apply the grants out-of-band via SQL after deploy:
 #
-#   GRANT USE SCHEMA, SELECT ON SCHEMA jdub_demo.panda TO `<app-sp-client-id>`;
+#   GRANT USE SCHEMA, SELECT ON SCHEMA ${var.catalog}.${var.schema} TO `<app-sp-client-id>`;
 #
 # where <app-sp-client-id> is the App's service_principal_client_id (a UUID),
 # discoverable via `databricks apps get labor-iq`.

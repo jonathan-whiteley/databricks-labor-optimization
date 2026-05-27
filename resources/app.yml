@@ -1,4 +1,4 @@
-# Databricks App resource for the Panda Labor Optimization demo.
+# Databricks App resource for the Labor IQ demo.
 #
 # Resource bindings supported by the App's `resources` block in this CLI:
 #   - database         -> Lakebase instance (CAN_CONNECT_AND_CREATE only)
@@ -14,24 +14,24 @@
 
 resources:
   apps:
-    panda_app:
+    labor_iq_app:
       name: ${var.app_name}
-      description: "Panda Express labor optimization demo app"
+      description: "Labor IQ: labor optimization demo app for retail, restaurant, and hospitality operators"
       source_code_path: ..
       resources:
         - name: lakebase
           description: "Lakebase Postgres instance backing forecasts/recs/schedules."
           database:
             instance_name: ${var.lakebase_instance}
-            database_name: panda_labor
+            database_name: labor_iq
             permission: CAN_CONNECT_AND_CREATE
         - name: labor_endpoint
           description: "Foundation-model serving endpoint for labor recommendations."
           serving_endpoint:
             # Reference the endpoint resource so we pick up the dev-mode prefix
-            # (e.g. dev_jonathan_whiteley_panda-labor-rec-v1) instead of the
-            # literal var.endpoint_name (panda-labor-rec-v1) which doesn't exist.
-            name: ${resources.model_serving_endpoints.panda_labor_endpoint.name}
+            # (e.g. dev_<user>_labor-iq-rec-v1) instead of the literal
+            # var.endpoint_name (labor-iq-rec-v1) which doesn't exist.
+            name: ${resources.model_serving_endpoints.labor_iq_endpoint.name}
             permission: CAN_QUERY
       permissions:
         - user_name: ${var.user_email}

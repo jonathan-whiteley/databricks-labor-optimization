@@ -1,35 +1,35 @@
 bundle:
-  name: panda-labor-optimization
+  name: labor-iq
 
 variables:
   catalog:
     description: Catalog for all data
     default: jdub_demo
   schema:
-    description: Schema with Panda data
-    default: panda
+    description: UC schema that holds the labor tables (stores, forecasts, recommendations, staffing_targets, daily_store_revenue)
+    default: labor_demo
   app_name:
     description: Databricks App name
     default: labor-iq
   endpoint_name:
     description: Model Serving endpoint
-    default: panda-labor-rec-v1
+    default: labor-iq-rec-v1
   job_name:
     description: Refresh job
-    default: panda_labor_refresh
+    default: labor_iq_refresh
   lakebase_instance:
     description: Lakebase instance name
-    default: panda-labor-db
+    default: labor-iq-db
   user_email:
     description: Owner email
     default: jonathan.whiteley@databricks.com
   genie_space_id:
     description: |
-      Panda Labor Planner Genie space ID. Drives the Ask Genie iframe and is
-      the input to notebooks/06_ensure_genie_space.py for PATCH semantics.
-      Leave blank to have the notebook create a new space and print its ID,
-      then pin it here.
-    default: 01f14e48463113eda51eff62f704947a
+      Labor IQ Genie space ID. Drives the Ask Genie iframe and is the input
+      to notebooks/06_ensure_genie_space.py for PATCH semantics. Leave blank
+      to have the notebook create a new space and print its ID, then pin it
+      here.
+    default: ""
 
 include:
   - resources/*.yml

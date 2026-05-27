@@ -1,17 +1,17 @@
 resources:
   model_serving_endpoints:
-    panda_labor_endpoint:
+    labor_iq_endpoint:
       name: ${var.endpoint_name}
       config:
         served_entities:
-          - name: panda-labor-rec-current
-            entity_name: ${var.catalog}.${var.schema}.panda_labor_rec_model
+          - name: labor-iq-rec-current
+            entity_name: ${var.catalog}.${var.schema}.labor_rec_model
             entity_version: "6"
             workload_size: Small
             scale_to_zero_enabled: true
         traffic_config:
           routes:
-            - served_model_name: panda-labor-rec-current
+            - served_model_name: labor-iq-rec-current
               traffic_percentage: 100
       permissions:
         - user_name: ${var.user_email}
@@ -20,5 +20,5 @@ resources:
         # client_id (UUID) here because the bundle's `service_principal_name`
         # interpolation produces a display string with a space, which UC
         # rejects as an invalid principal.
-        - service_principal_name: ${resources.apps.panda_app.service_principal_client_id}
+        - service_principal_name: ${resources.apps.labor_iq_app.service_principal_client_id}
           level: CAN_QUERY

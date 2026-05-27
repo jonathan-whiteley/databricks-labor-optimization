@@ -1,4 +1,4 @@
-# Lakebase Provisioned setup for the Panda Labor Optimization app.
+# Lakebase Provisioned setup for the Labor IQ app.
 #
 # Provides:
 #   1. A Lakebase Provisioned instance (CU_1) backing the app's OLTP needs.
@@ -20,7 +20,7 @@
 
 resources:
   database_instances:
-    panda_labor_db:
+    labor_iq_db:
       name: ${var.lakebase_instance}
       capacity: CU_1
       stopped: false
@@ -28,7 +28,7 @@ resources:
   synced_database_tables:
     sales_forecasts_synced:
       name: ${var.catalog}.${var.schema}.sales_forecasts_synced
-      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      database_instance_name: ${resources.database_instances.labor_iq_db.name}
       logical_database_name: panda_labor
       spec:
         source_table_full_name: ${var.catalog}.${var.schema}.sales_forecasts
@@ -44,7 +44,7 @@ resources:
 
     labor_recommendations_synced:
       name: ${var.catalog}.${var.schema}.labor_recommendations_synced
-      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      database_instance_name: ${resources.database_instances.labor_iq_db.name}
       logical_database_name: panda_labor
       spec:
         source_table_full_name: ${var.catalog}.${var.schema}.labor_recommendations
@@ -60,7 +60,7 @@ resources:
 
     staffing_targets_synced:
       name: ${var.catalog}.${var.schema}.staffing_targets_synced
-      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      database_instance_name: ${resources.database_instances.labor_iq_db.name}
       logical_database_name: panda_labor
       spec:
         source_table_full_name: ${var.catalog}.${var.schema}.staffing_targets
@@ -77,7 +77,7 @@ resources:
 
     stores_synced:
       name: ${var.catalog}.${var.schema}.stores_synced
-      database_instance_name: ${resources.database_instances.panda_labor_db.name}
+      database_instance_name: ${resources.database_instances.labor_iq_db.name}
       logical_database_name: panda_labor
       spec:
         source_table_full_name: ${var.catalog}.${var.schema}.stores

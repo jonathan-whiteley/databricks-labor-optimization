@@ -66,7 +66,7 @@ variables:
   genie_space_id:    { default: "" }   # leave blank on first run
 ```
 
-The default resource names (`panda_labor_refresh` job, `panda-labor-rec-v1` endpoint, `labor-iq` app) are bundle variables you can override the same way.
+The default resource names (`labor_iq_refresh` job, `labor-iq-rec-v1` endpoint, `labor-iq` app, `labor-iq-db` Lakebase instance) are bundle variables you can override the same way.
 
 ### 4. Build the UI and deploy
 
@@ -97,7 +97,7 @@ psql "$LAKEBASE_URI" -f notebooks/05_init_schedules_table.sql
 ### 7. Run the refresh job
 
 ```bash
-databricks bundle run panda_labor_refresh
+databricks bundle run labor_iq_refresh
 ```
 
 Three tasks run in sequence: `ai_forecast` (SQL on a warehouse), `run_recommendations` (notebook on serverless that hits the model endpoint), and `ensure_genie_space` (idempotent CREATE/PATCH). On the first run, the Genie task prints a new space ID: paste it into `databricks.yml` under `genie_space_id` and redeploy so the iframe in the app picks it up.
@@ -129,7 +129,7 @@ The local backend uses your Databricks CLI profile to mint short-lived Lakebase 
                                   |
                                   v
         +-------------------------------------------------+
-        |       Bundle: panda-labor-optimization          |
+        |             Bundle: labor-iq                    |
         +-------------------------------------------------+
           |             |             |            |
           v             v             v            v
@@ -161,13 +161,13 @@ Reads in the app go to the four `*_synced` tables. Manager-approved schedules wr
 
 | Resource | Type | Notes |
 |---|---|---|
-| `panda_labor_refresh` | Job | 3 tasks: `ai_forecast` (SQL warehouse), `run_recommendations` (serverless), `ensure_genie_space` (serverless) |
-| `panda_labor_endpoint` | Model Serving | Pyfunc labor model, `Small` workload, scale-to-zero |
-| `panda_app` | Databricks App | FastAPI + React, OAuth, service principal |
-| `panda_labor_db` | Lakebase Database Instance | `CU_1` capacity |
+| `labor_iq_refresh` | Job | 3 tasks: `ai_forecast` (SQL warehouse), `run_recommendations` (serverless), `ensure_genie_space` (serverless) |
+| `labor_iq_endpoint` | Model Serving | Pyfunc labor model, `Small` workload, scale-to-zero |
+| `labor_iq_app` | Databricks App | FastAPI + React, OAuth, service principal |
+| `labor_iq_db` | Lakebase Database Instance | `CU_1` capacity |
 | `*_synced` | Synced Database Tables (×4) | `sales_forecasts`, `labor_recommendations`, `staffing_targets`, `stores` |
 
-Resource names default to `panda_*` (the original demo customer). Override them with bundle variables: see `databricks.yml`.
+All resource names are bundle variables: override them in `databricks.yml` to fit your workspace's naming conventions.
 
 <details>
 <summary><strong>Manager Workflow</strong></summary>
