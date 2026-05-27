@@ -14,11 +14,15 @@ interface Props {
   refreshing: boolean
   onRefresh: () => void
   lastRun: string
+  // true when the displayed date is the actual "tomorrow"; false when the
+  // app clamped to the latest forecasted day because tomorrow is past the
+  // forecast horizon (stale-data demo case).
+  isTomorrow: boolean
 }
 
 export function DayBanner({
   date, totalRev, totalCost, baseRev, baseCost,
-  laborPct, headcount, baseHc, overrideCount, refreshing, onRefresh, lastRun,
+  laborPct, headcount, baseHc, overrideCount, refreshing, onRefresh, lastRun, isTomorrow,
 }: Props) {
   const d = new Date(date + "T00:00:00")
   const day = d.toLocaleDateString("en-US", { weekday: "long" })
@@ -51,7 +55,7 @@ export function DayBanner({
             fontSize: 11, fontWeight: 500, letterSpacing: "0.06em",
             textTransform: "uppercase", marginBottom: 10,
           }}>
-            <Icon name="sparkle" size={11} color="#fff" /> Tomorrow's plan
+            <Icon name="sparkle" size={11} color="#fff" /> {isTomorrow ? "Tomorrow's plan" : "Latest available plan"}
           </div>
           <h1 style={{
             margin: 0, fontSize: 38, fontWeight: 600,
@@ -60,8 +64,9 @@ export function DayBanner({
             {day}, {dateLabel}
           </h1>
           <div style={{ marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", maxWidth: 480, lineHeight: 1.5 }}>
-            We've forecasted tomorrow's traffic by day-part. Adjust anything you know that we don't,
-            then approve when it looks right.
+            {isTomorrow
+              ? "We've forecasted tomorrow's traffic by day-part. Adjust anything you know that we don't, then approve when it looks right."
+              : "Showing the most recent day we have a forecast for. Adjust anything you know that we don't, then approve when it looks right."}
           </div>
           <div style={{
             marginTop: 14, display: "flex", alignItems: "center", gap: 12,

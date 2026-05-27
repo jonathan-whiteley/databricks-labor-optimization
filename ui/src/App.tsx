@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
-  listStores, getForecast, getRecommendation, recompute,
+  listStores, getForecast, getForecastHorizon, getRecommendation, recompute,
   deleteScheduleDayPart, type DayPartRec,
 } from "@/lib/api"
 import { C, DAYPART_IDS, theme, fmt$, crewCount, type DayPartId } from "@/lib/theme"
@@ -25,6 +25,14 @@ function tomorrowISO(): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Pick the date the app loads with: tomorrow if it's within the available
+// forecast window, otherwise clamp to the latest forecasted date so the
+// demo still has data to show.
+function clampToHorizon(target: string, lastAvailable: string | null | undefined): string {
+  if (!lastAvailable) return target
+  return target <= lastAvailable ? target : lastAvailable
+}
+
 export default function App() {
   const qc = useQueryClient()
 
@@ -43,7 +51,13 @@ export default function App() {
   }, [storeId])
 
   const store = stores.find(s => s.store_id === storeId) ?? null
-  const date = useMemo(() => tomorrowISO(), [])
+  const horizonQ = useQuery({ queryKey: ["forecast-horizon"], queryFn: getForecastHorizon })
+  const tomorrow = useMemo(() => tomorrowISO(), [])
+  const date = useMemo(
+    () => clampToHorizon(tomorrow, horizonQ.data?.last_date),
+    [tomorrow, horizonQ.data?.last_date],
+  )
+  const isTomorrow = date === tomorrow
 
   const fQuery = useQuery({
     queryKey: ["forecast", storeId, date],
@@ -253,6 +267,7 @@ export default function App() {
               refreshing={refreshing}
               onRefresh={refresh}
               lastRun={lastRun}
+              isTomorrow={isTomorrow}
             />
 
             <section>

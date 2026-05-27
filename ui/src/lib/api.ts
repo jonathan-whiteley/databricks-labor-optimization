@@ -27,7 +27,11 @@ export type RecommendationResponse = {
   day_parts: DayPartRec[]
 }
 
+export type ForecastHorizon = { first_date: string | null; last_date: string | null }
+
 export const listStores = () => api.get<Store[]>("/stores").then(r => r.data)
+export const getForecastHorizon = () =>
+  api.get<ForecastHorizon>("/forecast/horizon").then(r => r.data)
 export const getForecast = (s: number, d: string) =>
   api.get<ForecastResponse>(`/forecast/${s}/${d}`).then(r => r.data)
 export const getRecommendation = (s: number, d: string) =>
