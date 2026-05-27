@@ -12,15 +12,15 @@ A 10-15 minute demo of the **Labor IQ** app (Lakehouse Market branding) showing 
 
 Do this **the morning of the demo**, not the night before.
 
-### 1. Confirm forecasts cover tomorrow
+### 1. Confirm forecasts exist
 
-The app shows tomorrow's plan. If forecasts are stale you will see a red banner:
+The app defaults to **tomorrow's date** if a forecast for tomorrow exists; otherwise it clamps to the most recent forecasted day and the chip in the banner reads **"Latest available plan"** instead of **"Tomorrow's plan"**. Either way you have numbers on screen.
 
-> *Forecast not yet generated for this store/date. Run the refresh job to populate tomorrow's plan.*
+**Quick check:** open the app and pick any store. If you see numbers, you are good. If the page shows no forecast data at all, run the refresh job (next step).
 
-**Quick check:** open the app and pick any store. If you see the banner, run the refresh job (next step). If you see numbers, you are good.
+If you want the demo to actually say "Tomorrow's plan" (i.e. the forecast window covers tomorrow), run the refresh job.
 
-### 2. Run the refresh job (if forecasts are stale)
+### 2. Run the refresh job (if you want a fresh "Tomorrow's plan")
 
 In the Databricks workspace (https://fe-vm-jdub-vm-serverless.cloud.databricks.com):
 
@@ -215,7 +215,8 @@ If you want me to do this, ask: **"do Phase 2 for labor-iq."**
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| "Forecast not yet generated..." banner | Forecast window has expired | Run `panda_labor_refresh` in Workflows |
+| Banner says "Latest available plan" instead of "Tomorrow's plan" | Forecast window does not yet reach tomorrow | Optional: run `panda_labor_refresh` to push the window forward. Demo still works as-is. |
+| No data at all in the day-part cards | `sales_forecasts` table is empty | Run `panda_labor_refresh` (and `01_generate_synthetic_data` first if the historical table is also empty) |
 | 500 on `/api/stores` | Lakebase auth or grant issue | Check `databricks apps logs labor-iq` |
 | Ask Genie returns no data | Genie space points at empty tables | Run the refresh job |
 | App slow on first request | Lakebase pool warm-up | First click is slow; subsequent are fast |
