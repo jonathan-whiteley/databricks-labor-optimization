@@ -1,6 +1,6 @@
 command:
   - "uvicorn"
-  - "panda_labor.app:app"
+  - "labor_iq.app:app"
   - "--host"
   - "0.0.0.0"
   - "--port"

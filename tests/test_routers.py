@@ -1,6 +1,6 @@
 """Smoke tests for the FastAPI app - no Lakebase, no endpoint."""
 from fastapi.testclient import TestClient
-from panda_labor.app import app
+from labor_iq.app import app
 
 
 def test_health_endpoint_exists():

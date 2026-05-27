@@ -9,5 +9,5 @@ export default defineConfig({
   server: {
     proxy: { "/api": "http://localhost:8000" },
   },
-  build: { outDir: "../src/panda_labor/static", emptyOutDir: true },
+  build: { outDir: "../src/labor_iq/static", emptyOutDir: true },
 })

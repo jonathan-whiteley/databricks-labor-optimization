@@ -1,7 +1,7 @@
 [project]
-name = "panda-labor"
+name = "labor-iq"
 version = "0.1.0"
-description = "Panda Express labor optimization demo app"
+description = "Labor IQ: generic labor optimization demo app"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
@@ -20,7 +20,7 @@ dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.7"]
 package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/panda_labor"]
+packages = ["src/labor_iq"]
 
 [build-system]
 requires = ["hatchling"]
