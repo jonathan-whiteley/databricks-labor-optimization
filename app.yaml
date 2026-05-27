@@ -23,4 +23,4 @@ env:
   - name: USER_EMAIL
     value: jonathan.whiteley@databricks.com
   - name: GENIE_SPACE_ID
-    value: 01f14e48463113eda51eff62f704947a
+    value: 01f15a1f81f61d139129cc802fc0f2ad

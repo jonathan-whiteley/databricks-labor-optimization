@@ -26,7 +26,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Panda Labor Planner", lifespan=lifespan)
+app = FastAPI(title="Labor IQ", lifespan=lifespan)
 app.include_router(stores.router)
 app.include_router(forecast.router)
 app.include_router(recommendation.router)
