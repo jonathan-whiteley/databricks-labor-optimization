@@ -64,7 +64,7 @@ variables:
   genie_space_id:    { default: "" }   # leave blank on first run
 ```
 
-The default resource names (`panda_labor_refresh` job, `panda-labor-rec-v1` endpoint, `panda-labor-planner` app) are bundle variables you can override the same way.
+The default resource names (`panda_labor_refresh` job, `panda-labor-rec-v1` endpoint, `labor-iq` app) are bundle variables you can override the same way.
 
 ### 4. Build the UI and deploy
 

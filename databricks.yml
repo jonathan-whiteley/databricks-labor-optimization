@@ -10,7 +10,7 @@ variables:
     default: panda
   app_name:
     description: Databricks App name
-    default: panda-labor-planner
+    default: labor-iq
   endpoint_name:
     description: Model Serving endpoint
     default: panda-labor-rec-v1

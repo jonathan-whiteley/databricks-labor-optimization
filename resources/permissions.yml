@@ -13,6 +13,6 @@
 #   GRANT USE SCHEMA, SELECT ON SCHEMA jdub_demo.panda TO `<app-sp-client-id>`;
 #
 # where <app-sp-client-id> is the App's service_principal_client_id (a UUID),
-# discoverable via `databricks apps get panda-labor-planner`.
+# discoverable via `databricks apps get labor-iq`.
 
 resources: {}
