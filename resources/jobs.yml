@@ -5,20 +5,20 @@ resources:
       tasks:
         - task_key: ai_forecast
           notebook_task:
-            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/02_ai_forecast
+            notebook_path: /Users/jonathan.whiteley@databricks.com/labor-optimization/02_ai_forecast
             warehouse_id: 0168e23e24e6ae10
         - task_key: run_recommendations
           depends_on:
             - task_key: ai_forecast
           notebook_task:
-            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/04_run_recommendations
+            notebook_path: /Users/jonathan.whiteley@databricks.com/labor-optimization/04_run_recommendations
           environment_key: default
         # Reapplies the Genie space spec (idempotent: PATCH when var.genie_space_id
         # is set, CREATE otherwise — first run prints the ID to pin in databricks.yml).
         # No DAB resource type for Genie spaces yet; this notebook is the artifact.
         - task_key: ensure_genie_space
           notebook_task:
-            notebook_path: /Users/jonathan.whiteley@databricks.com/panda-labor/06_ensure_genie_space
+            notebook_path: /Users/jonathan.whiteley@databricks.com/labor-optimization/06_ensure_genie_space
             base_parameters:
               space_id: ${var.genie_space_id}
           environment_key: default

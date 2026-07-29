@@ -1,6 +1,6 @@
 # Databricks notebook source
 """
-Ensures the Panda Labor Planner Genie space exists and is up-to-date.
+Ensures the Labor Optimization Genie space exists and is up-to-date.
 
 Idempotent:
   - If `space_id` widget is set (or env var GENIE_SPACE_ID is non-empty),
@@ -17,7 +17,7 @@ deploy` whenever the spec changes:
       --json '{"run_name":"ensure_genie_space",
                "tasks":[{"task_key":"r",
                          "notebook_task":{"notebook_path":
-                           "/Workspace/Users/jonathan.whiteley@databricks.com/.bundle/panda-labor-optimization/default/files/notebooks/06_ensure_genie_space"}}]}'
+                           "/Workspace/Users/jonathan.whiteley@databricks.com/.bundle/labor-optimization/default/files/notebooks/06_ensure_genie_space"}}]}'
 
 The resulting URL feeds the React app's `VITE_GENIE_SPACE_URL` at build
 time so the Ask Genie panel renders this space in an iframe.
@@ -36,21 +36,21 @@ from uuid import uuid4
 from databricks.sdk import WorkspaceClient
 
 CATALOG = "jdub_demo"
-SCHEMA = "panda"
+SCHEMA = "labor_optimization"
 WAREHOUSE_ID = "0168e23e24e6ae10"
-TITLE = "Panda Labor Planner"
+TITLE = "Labor Optimization Planner"
 DESCRIPTION = (
-    "Natural-language access to Panda Express's daily store revenue, "
+    "Natural-language access to daily store revenue, "
     "AI labor recommendations, and tomorrow's sales forecasts. Powers the "
-    "Ask Genie panel inside the Labor Planner app."
+    "Ask Genie panel inside the Labor Optimization app."
 )
 
 INSTRUCTIONS = (
-    "You are answering questions from a Panda Express General Manager "
+    "You are answering questions from a General Manager "
     "planning tomorrow's labor schedule. They care about: predicted vs. "
     "actual sales, labor cost as a percent of revenue (target 22-26%), "
     "recommended headcount by day-part (breakfast, lunch, dinner, late), "
-    "how their store compares to their region and Panda overall, and "
+    "how their store compares to their region overall, and "
     "whether any day-parts are overstaffed. Day-parts are always one of: "
     "breakfast, lunch, dinner, late. Labor% is "
     "labor_recommendations.recommended_cost / "
