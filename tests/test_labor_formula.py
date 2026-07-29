@@ -92,7 +92,7 @@ def test_cost_scales_with_headcount():
 
 
 def test_labor_pct_target_for_typical_store():
-    """At realistic Panda revenue ranges, labor % should hover in 22-28%.
+    """At realistic revenue ranges, labor % should hover in 22-28%.
     Outside that band signals a formula regression."""
     cases = [(2000, "breakfast"), (3500, "lunch"), (3000, "dinner"), (800, "late")]
     for sales, dp in cases:

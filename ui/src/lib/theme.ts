@@ -63,15 +63,15 @@ export interface Theme {
   }[]
 }
 
-import { pandaTheme } from "./themes/panda"
+import { defaultTheme } from "./themes/default"
 import { lakehouseTheme } from "./themes/lakehouse"
 
-const REGISTRY: Record<string, Theme> = { panda: pandaTheme, lakehouse: lakehouseTheme }
+const REGISTRY: Record<string, Theme> = { labor_optimization: defaultTheme, lakehouse: lakehouseTheme }
 
 const brandKey =
-  (import.meta.env.VITE_BRAND as string | undefined) ?? "lakehouse"
+  (import.meta.env.VITE_BRAND as string | undefined) ?? "labor_optimization"
 
-export const theme: Theme = REGISTRY[brandKey] ?? lakehouseTheme
+export const theme: Theme = REGISTRY[brandKey] ?? defaultTheme
 
 // Convenience re-exports so call sites stay short.
 export const C = theme.palette

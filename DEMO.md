@@ -49,7 +49,7 @@
 ## Demo prep checklist (5 min the morning of)
 
 1. Open the app, pick a store, confirm cards have numbers. If the banner reads **"Latest available plan"** instead of **"Tomorrow's plan"**, that's fine: the app clamps to the latest forecasted day. Demo still works.
-2. Want it to actually say "Tomorrow's plan"? Run the **`panda_labor_refresh`** job in Workflows (3 minutes). Same job serves both apps.
+2. Want it to actually say "Tomorrow's plan"? Run the **`labor_optimization_refresh`** job in Workflows (3 minutes). Same job serves both apps.
 3. Have these tabs open: the app, and one architecture slide.
 4. Pick a story store and stick with it.
 
@@ -68,11 +68,11 @@
 
 | Symptom | Fix |
 |---|---|
-| Banner says "Latest available plan" | Optional: run `panda_labor_refresh` to push the window forward. Demo still works as-is. |
-| No data in cards at all | `sales_forecasts` is empty. Run `01_generate_synthetic_data` then `panda_labor_refresh`. |
+| Banner says "Latest available plan" | Optional: run `labor_optimization_refresh` to push the window forward. Demo still works as-is. |
+| No data in cards at all | `sales_forecasts` is empty. Run `01_generate_synthetic_data` then `labor_optimization_refresh`. |
 | 500 on `/api/stores` | `databricks apps logs labor-iq` |
 | First click is slow | Lakebase pool warm-up. Second click is fast. |
 
 ---
 
-*Heads-up: if you click **Show SQL** in Ask Genie, table references read `jdub_demo.panda.*`. Row content is generic; if the customer is not Panda Express, just don't open Show SQL during the demo. Ask if you want the schema renamed.*
+*Note: All table references in SQL queries are now using the `jdub_demo.labor_optimization` schema. The schema is fully sanitized of customer references.*

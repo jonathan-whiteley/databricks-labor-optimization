@@ -1,6 +1,6 @@
 # Databricks notebook source
 """
-Wraps Panda's labor formula in an MLflow pyfunc and registers it to UC.
+Wraps the labor optimization formula in an MLflow pyfunc and registers it to UC.
 The Model Serving endpoint (declared in resources/model_serving.yml) consumes this version.
 """
 
@@ -20,12 +20,12 @@ from mlflow.models.signature import infer_signature
 print("mlflow version:", mlflow.__version__)
 
 CATALOG = "jdub_demo"
-SCHEMA = "panda"
-MODEL_NAME = f"{CATALOG}.{SCHEMA}.panda_labor_rec_model"
+SCHEMA = "labor_optimization"
+MODEL_NAME = f"{CATALOG}.{SCHEMA}.labor_rec_model"
 
 # COMMAND ----------
 
-class PandaLaborModel(mlflow.pyfunc.PythonModel):
+class LaborOptimizationModel(mlflow.pyfunc.PythonModel):
     # Tuned to land most stores at ~24% labor% (within the 22-26% goal).
     # labor_pct ≈ (HOURS_PER_DP * AVG_RATE * MULT[dp]) / SALES_PER_LABOR_HOUR
     # With AVG_RATE=17.50, HOURS_PER_DP=4 → labor_pct ≈ 70 * MULT / SALES_PER_LH.
@@ -82,13 +82,13 @@ example = pd.DataFrame([
     {"store_id": 1, "projected_sales": 4500.0, "day_part": "lunch"},
     {"store_id": 2, "projected_sales": 1200.0, "day_part": "breakfast"},
 ])
-output = PandaLaborModel().predict(None, example)
+output = LaborOptimizationModel().predict(None, example)
 print(output)
 
-with mlflow.start_run(run_name="panda-labor-rec") as run:
+with mlflow.start_run(run_name="labor-rec") as run:
     info = mlflow.pyfunc.log_model(
         artifact_path="model",
-        python_model=PandaLaborModel(),
+        python_model=LaborOptimizationModel(),
         input_example=example,
         signature=infer_signature(example, output),
     )

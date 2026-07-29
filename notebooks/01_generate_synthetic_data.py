@@ -1,11 +1,11 @@
 # Databricks notebook source
 """
-Generates synthetic labor data for the Panda Labor Optimization demo.
+Generates synthetic labor data for the Labor Optimization demo.
 
-Tables produced (in jdub_demo.panda):
+Tables produced (in jdub_demo.labor_optimization):
   - employees:        ~50 per store, role-distributed
   - shifts:           90 days of historical labor with realistic hours/cost tracking sales
-  - staffing_targets: Panda's labor formula encoded as a lookup
+  - staffing_targets: Labor optimization formula encoded as a lookup
 
 Idempotent: overwrites each table.
 """
@@ -20,7 +20,7 @@ from pyspark.sql.types import (
 )
 
 CATALOG = "jdub_demo"
-SCHEMA = "panda"
+SCHEMA = "labor_optimization"
 random.seed(42)
 
 ROLES = ["cook", "cashier", "shift_lead", "manager"]

@@ -1,6 +1,6 @@
 # Databricks notebook source
 """
-Reads sales_forecasts, calls the panda-labor-rec-v1 endpoint, writes labor_recommendations.
+Reads sales_forecasts, calls the labor-rec-v1 endpoint, writes labor_recommendations.
 Runs as part of the Lakeflow refresh job after 02_ai_forecast.
 """
 import requests
@@ -11,8 +11,8 @@ from pyspark.sql.types import (
 )
 
 CATALOG = "jdub_demo"
-SCHEMA = "panda"
-ENDPOINT = "dev_jonathan_whiteley_panda-labor-rec-v1"
+SCHEMA = "labor_optimization"
+ENDPOINT = "dev_jonathan_whiteley_labor-rec-v1"
 
 # COMMAND ----------
 
@@ -83,7 +83,7 @@ final = raw.select(
     "recommended_headcount", "recommended_cost",
     F.struct(F.col("cook"), F.col("cashier"),
              F.col("shift_lead"), F.col("manager")).alias("recommended_role_mix"),
-    F.lit("panda_labor_rec_model:5").alias("model_version"),
+    F.lit("labor_rec_model:5").alias("model_version"),
     F.current_timestamp().alias("generated_ts"),
 )
 

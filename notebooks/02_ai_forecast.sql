@@ -12,7 +12,7 @@
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS jdub_demo.panda.sales_forecasts (
+CREATE TABLE IF NOT EXISTS jdub_demo.labor_optimization.sales_forecasts (
   store_id INT,
   forecast_date DATE,
   day_part STRING,
@@ -22,20 +22,20 @@ CREATE TABLE IF NOT EXISTS jdub_demo.panda.sales_forecasts (
   model_version STRING
 );
 
-DELETE FROM jdub_demo.panda.sales_forecasts;
+DELETE FROM jdub_demo.labor_optimization.sales_forecasts;
 
 -- COMMAND ----------
 
 -- Anchor to the latest date we have revenue for; ai_forecast extrapolates from there.
 CREATE OR REPLACE TEMP VIEW input_series AS
-WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.panda.daily_store_revenue)
+WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.labor_optimization.daily_store_revenue)
 SELECT d.store_id, d.sale_date AS ds, d.total_revenue AS y
-FROM jdub_demo.panda.daily_store_revenue d, bounds
+FROM jdub_demo.labor_optimization.daily_store_revenue d, bounds
 WHERE d.sale_date >= DATE_SUB(bounds.max_d, 180);
 
 -- Forecast 14 days past the data edge.
 CREATE OR REPLACE TEMP VIEW daily_forecast AS
-WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.panda.daily_store_revenue)
+WITH bounds AS (SELECT MAX(sale_date) AS max_d FROM jdub_demo.labor_optimization.daily_store_revenue)
 SELECT *
 FROM ai_forecast(
   TABLE(input_series),
@@ -51,7 +51,7 @@ CREATE OR REPLACE TEMP VIEW dayparts_share AS
 WITH dp_totals AS (
   SELECT s.store_id, DAYOFWEEK(s.shift_date) AS dow, s.day_part,
          SUM(s.labor_cost) AS dp_labor
-  FROM jdub_demo.panda.shifts s
+  FROM jdub_demo.labor_optimization.shifts s
   GROUP BY s.store_id, DAYOFWEEK(s.shift_date), s.day_part
 ),
 day_totals AS (
@@ -61,7 +61,7 @@ SELECT t.store_id, t.dow, t.day_part,
        t.dp_labor / NULLIF(d.day_labor, 0) AS share
 FROM dp_totals t JOIN day_totals d USING (store_id, dow);
 
-INSERT INTO jdub_demo.panda.sales_forecasts
+INSERT INTO jdub_demo.labor_optimization.sales_forecasts
 SELECT
   f.store_id,
   CAST(f.ds AS DATE) AS forecast_date,
@@ -73,11 +73,11 @@ SELECT
 FROM daily_forecast f
 JOIN dayparts_share s
   ON f.store_id = s.store_id AND DAYOFWEEK(CAST(f.ds AS DATE)) = s.dow
-WHERE CAST(f.ds AS DATE) > (SELECT MAX(sale_date) FROM jdub_demo.panda.daily_store_revenue);
+WHERE CAST(f.ds AS DATE) > (SELECT MAX(sale_date) FROM jdub_demo.labor_optimization.daily_store_revenue);
 
 SELECT COUNT(*) AS forecast_rows,
        MIN(forecast_date) AS first_day,
        MAX(forecast_date) AS last_day,
        COUNT(DISTINCT store_id) AS n_stores
-FROM jdub_demo.panda.sales_forecasts
+FROM jdub_demo.labor_optimization.sales_forecasts
 WHERE forecast_ts >= current_timestamp() - INTERVAL 1 HOUR;
